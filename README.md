@@ -1,16 +1,76 @@
-# React + Vite
+# Lock Focus
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Lock Focus is an immersive web application designed to help users assess, track, and improve their cognitive focus. Built with modern web technologies, it combines productivity tools with a visually engaging interface to create a unique user experience.
 
-Currently, two official plugins are available:
+## � Problem Statement
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Static Content Design**: Most interfaces use fixed layouts. They assume linear reading. This causes cognitive overload.
+- **Poor Neurodiversity Support**: Dense text blocks hurt readability. ADHD and dyslexic users struggle. No adaptive reading flow.
+- **No Real-Time User Awareness**: Systems don’t track attention signals. No detection of skimming or confusion. Feedback comes too late or never.
+- **Accessibility Needs Manual Setup**: Tools depend on diagnosis or settings. Many users never enable them. Support doesn’t reach scale.
 
-## React Compiler
+## 💡 Proposed Solution
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**An Intent-Aware, Adaptive Reading Ecosystem**
 
-## Expanding the ESLint configuration
+- **Dynamic Personalisation**: Platform that reshapes content in real time based on how a user interacts with the screen.
+- **Behavioural Intelligence**: Actively adjusts layout, text emphasis, and pacing using engagement signals.
+- **Frictionless Accessibility**: Privacy first by design. Inclusive features activate automatically, without diagnosis or manual setup.
+- **Outcome-Driven Design**: Reduces visual noise and cognitive load. Improves comprehension and retention in long form digital content consuming.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🌟 Impacts and Benefits
+
+- **For Learners**: Less eye strain and mental fatigue, higher confidence and task completion. Finish long form work without burnout.
+- **For Educators**: Clear data on where learners struggle and Identify difficult sections instantly. Design better, clearer content.
+- **For Institutions**: Supports Universal Design for Learning (UDL). Improves engagement and retention rates.
+- **For Society**: Normalises adaptive reading tools while removing stigma around learning support.
+
+## �🚀 Features
+
+- **Interactive Dashboard**: A central hub to track your progress and navigate through the application.
+- **Focus Scan**: A specialized testing module to assess your current focus levels.
+- **Detailed Analytics**: View comprehensive test results to understand your cognitive performance.
+- **Immersive Reader**: A distraction-free environment for reading and study.
+- **Secure Authentication**: User accounts with Login and Sign-Up functionality.
+- **Modern UI/UX**: 
+  - Smooth animations powered by **Framer Motion**.
+  - Interactive 3D elements using **React Three Fiber**.
+  - Responsive and accessible design with **Tailwind CSS**.
+
+## 🛠️ Tech Stack
+
+- **Framework**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **3D Graphics**: [React Three Fiber](https://docs.pmnd.rs/react-three-fiber/) & [Drei](https://github.com/pmndrs/drei)
+- **Routing**: [React Router](https://reactrouter.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+
+## 📦 Getting Started
+
+Follow these steps to set up the project locally:
+
+1. **Clone the repository** (if applicable) or navigate to the project directory.
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Start the development server**:
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser**:
+   Navigate to `http://localhost:5173` (or the URL shown in your terminal) to view the application.
+
+## 🏗️ Build for Production
+
+To create a production-ready build:
+
+```bash
+npm run build
+```
+
+This will generate the static files in the `dist` directory.
