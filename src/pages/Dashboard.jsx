@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
-import { Play, Activity, Brain, Layers, ArrowRight, Zap, Eye, ChevronDown, Check, Book } from 'lucide-react';
+import { Play, Activity, Brain, Layers, ArrowRight, Zap, Eye, ChevronDown, Check, Book, RefreshCw } from 'lucide-react';
 import { useTheme } from '../components/ThemeContext';
 import ProgressCharts from '../components/ProgressCharts';
 
@@ -228,13 +228,16 @@ const Dashboard = () => {
                                 onClick={() => toggleMode('adhd')}
                                 colorClass="bg-orange-500"
                             />
-                            <ModeButton
-                                label="Dyslexia"
-                                icon={Book}
-                                active={accessibilityMode === 'dyslexia'}
-                                onClick={() => toggleMode('dyslexia')}
-                                colorClass="bg-green-500"
-                            />
+                            <Link to="/dyslexia-dashboard">
+                                <ModeButton
+                                    label="Dyslexia"
+                                    icon={Book}
+                                    active={accessibilityMode === 'dyslexia'}
+                                    // onClick={() => toggleMode('dyslexia')} // Old toggle
+                                    onClick={() => { }} // No-op, handled by Link or we can keep toggle + navigate
+                                    colorClass="bg-green-500"
+                                />
+                            </Link>
                             <ModeButton
                                 label="Stress"
                                 icon={Activity}
@@ -349,7 +352,6 @@ const Dashboard = () => {
             <div className="mt-12 pt-12 border-t border-gray-200 dark:border-slate-800">
                 <ProgressCharts />
             </div>
-
         </DashboardLayout>
     );
 };

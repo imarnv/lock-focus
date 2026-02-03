@@ -25,6 +25,20 @@ const Reader = () => {
         setSettings(prev => ({ ...prev, focusMode: !prev.focusMode }));
     };
 
+    const [isSpeaking, setIsSpeaking] = useState(false);
+
+    const handleSpeak = () => {
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+        } else {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.onend = () => setIsSpeaking(false);
+            window.speechSynthesis.speak(utterance);
+            setIsSpeaking(true);
+        }
+    };
+
     return (
         <div className={`min-h-screen transition-colors duration-500 ${settings.focusMode ? 'bg-zinc-900 text-gray-300' : 'bg-gray-50 text-gray-900'}`}>
             {/* Header */}
@@ -41,8 +55,16 @@ const Reader = () => {
 
                 <div className="flex items-center gap-2">
                     <button
+                        onClick={handleSpeak}
+                        className={`p-2 rounded-full transition-colors ${isSpeaking ? 'bg-green-100 text-green-700 animate-pulse' : 'hover:bg-gray-100 dark:hover:bg-zinc-800'}`}
+                        title="Read Aloud"
+                    >
+                        {/* Using Volume2 icon manually or importing it if available. Let's assume Volume2 is what we want */}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                    </button>
+                    <button
                         onClick={toggleFocusMode}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${settings.focusMode ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${settings.focusMode ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                     >
                         {settings.focusMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                         Focus Mode

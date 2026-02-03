@@ -7,6 +7,9 @@ import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import FocusScan from './pages/FocusScan';
 import Reader from './pages/Reader';
+import DyslexiaGame from './pages/DyslexiaGame';
+import DyslexiaDashboard from './pages/DyslexiaDashboard';
+import SyllableSlasher from './pages/SyllableSlasher';
 
 import { ThemeProvider } from './components/ThemeContext';
 import ProjectPage from './pages/ProjectPage';
@@ -51,6 +54,9 @@ function App() {
           <Route path="/focus-scan" element={<FocusScan />} />
           <Route path="/test-results" element={<TestResults />} />
           <Route path="/reader" element={<Reader />} />
+          <Route path="/dyslexia-game" element={<DyslexiaGame />} />
+          <Route path="/dyslexia-dashboard" element={<DyslexiaDashboard />} />
+          <Route path="/syllable-slasher" element={<SyllableSlasher />} />
         </Routes>
       </Router>
     </ThemeProvider>
