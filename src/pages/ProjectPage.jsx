@@ -72,7 +72,7 @@ const ProjectPage = () => {
 
                     <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <button
-                            onClick={() => navigate('/signup')}
+                            onClick={() => navigate('/dashboard')}
                             className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white rounded-full font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
                         >
                             <Play className="w-5 h-5 fill-current" />
@@ -189,7 +189,7 @@ const ProjectPage = () => {
                             Join thousands of users who have improved their visual and cognitive abilities with NeuroVision.
                         </p>
                         <button
-                            onClick={() => navigate('/signup')}
+                            onClick={() => navigate('/dashboard')}
                             className="relative z-10 px-10 py-4 bg-primary hover:bg-primary/90 text-white rounded-full font-bold shadow-lg transition-all transform hover:scale-105"
                         >
                             Start Free Trial

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, RefreshCw, Trophy, Star, Check, X, HelpCircle, Play, Pause } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -97,6 +97,7 @@ const DyslexiaGame = () => {
                 setTimeLeft(prev => prev - 1);
             }, 1000);
         } else if (timeLeft === 0 && gameState === 'playing') {
+            // End game
             setGameState('summary');
             triggerConfetti();
         }
