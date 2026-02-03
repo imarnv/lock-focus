@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
-import { Play, Activity, Brain, Layers, ArrowRight, Zap, Eye, ChevronDown, Check, Book, RefreshCw } from 'lucide-react';
+import { Play, Activity, Brain, Layers, ArrowRight, Zap, Eye, ChevronDown, Check, Book, RefreshCw, Sparkles, ArrowUpRight } from 'lucide-react';
 import { useTheme } from '../components/ThemeContext';
 import ProgressCharts from '../components/ProgressCharts';
+import AuroraAnimation from '../components/AuroraAnimation';
 
 const Card = ({ children, className = "", delay = 0 }) => (
     <motion.div
@@ -40,9 +41,6 @@ const ModeButton = ({ label, active, onClick, colorClass, icon: Icon }) => (
         )}
     </button>
 );
-
-import AuroraAnimation from '../components/AuroraAnimation';
-import { Sparkles, ArrowUpRight } from 'lucide-react';
 
 const Dashboard = () => {
     const { accessibilityMode, setAccessibilityMode, colorBlindMode, setColorBlindMode } = useTheme();
@@ -87,13 +85,13 @@ const Dashboard = () => {
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
                                 className="text-5xl md:text-7xl font-medium tracking-tight text-gray-900 dark:text-white"
                             >
-                                Good Afternoon,
+                                Welcome,
                             </motion.h1>
                             <motion.h1
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
                                 className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-500 dark:from-blue-400 dark:to-purple-400"
                             >
-                                Alex.
+                                Judges.
                             </motion.h1>
                         </div>
 
@@ -150,39 +148,8 @@ const Dashboard = () => {
             {/* DASHBOARD GRID */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 z-10 relative">
 
-                {/* A. SYSTEM STATUS */}
-                <div className="md:col-span-4">
-                    <Card delay={0.1} className="h-full flex flex-col justify-between group bg-white/50 backdrop-blur-xl">
-                        <div>
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-3 bg-gray-50 dark:bg-slate-800 rounded-2xl group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors">
-                                    <Layers className="w-6 h-6 text-gray-700 dark:text-gray-200 group-hover:text-blue-600 transition-colors" />
-                                </div>
-                                <h2 className="text-xl font-bold dark:text-white">System Status</h2>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
-                                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-                                    <span className="text-sm font-medium">Neural Engine: Online</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
-                                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-                                    <span className="text-sm font-medium">Eye Tracking: Calibrated</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
-                                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                                    <span className="text-sm font-medium">Synced with Cloud</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mt-8 pt-6 border-t border-gray-50 dark:border-slate-800">
-                            <p className="text-xs text-gray-400">Last synced: Just now</p>
-                        </div>
-                    </Card>
-                </div>
-
-                {/* B. START SCAN CTA */}
-                <div className="md:col-span-4">
+                {/* A. START SCAN CTA */}
+                <div className="md:col-span-6">
                     <Card delay={0.2} className="h-full relative overflow-hidden group border-blue-100 dark:border-blue-900 hover:border-blue-300 dark:hover:border-blue-700">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white dark:from-slate-800 dark:to-slate-900 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
@@ -209,8 +176,8 @@ const Dashboard = () => {
                     </Card>
                 </div>
 
-                {/* C. CREATIVE ACCESSIBILITY CONTROLS */}
-                <div className="md:col-span-4">
+                {/* B. VISION STUDIO / ACCESSIBILITY CONTROLS */}
+                <div className="md:col-span-6">
                     <Card delay={0.3} className="h-full bg-gradient-to-b from-white to-gray-50 dark:from-slate-900 dark:to-slate-950">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
@@ -233,8 +200,6 @@ const Dashboard = () => {
                                     label="Dyslexia"
                                     icon={Book}
                                     active={accessibilityMode === 'dyslexia'}
-                                    // onClick={() => toggleMode('dyslexia')} // Old toggle
-                                    onClick={() => { }} // No-op, handled by Link or we can keep toggle + navigate
                                     colorClass="bg-green-500"
                                 />
                             </Link>

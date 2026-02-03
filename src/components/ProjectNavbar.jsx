@@ -67,20 +67,7 @@ const ProjectNavbar = () => {
                     </button>
 
                     {/* Auth Buttons */}
-                    <div className="hidden md:flex items-center gap-4">
-                        <button
-                            onClick={() => navigate('/')}
-                            className="text-foreground/80 hover:text-foreground font-medium text-sm transition-colors py-2 px-4"
-                        >
-                            Log In
-                        </button>
-                        <button
-                            onClick={() => navigate('/signup')}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold py-2.5 px-6 rounded-full transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
-                        >
-                            Get Started
-                        </button>
-                    </div>
+
                 </div>
             </div>
         </motion.nav>
