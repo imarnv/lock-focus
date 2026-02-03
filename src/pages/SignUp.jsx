@@ -27,15 +27,15 @@ const SignUp = () => {
                 <form onSubmit={handleSignUp} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                        <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="John Doe" />
+                        <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="John Doe" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="hello@example.com" />
+                        <input type="email" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="hello@example.com" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input type="password" className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="••••••••" />
+                        <input type="password" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="••••••••" />
                     </div>
 
                     <button type="submit" className="w-full bg-primary text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30">

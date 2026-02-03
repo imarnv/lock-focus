@@ -1,103 +1,123 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useRef } from 'react';
 
 const NerveAnimation = () => {
-    // Neural Strands Flowing from Right (Eye Position) to Left (Screen Edge)
-    // Origin approx: x=85, y=50 (Right Center)
+    const canvasRef = useRef(null);
 
-    const paths = [
-        // Upper Strands
-        "M 85 50 C 70 50, 60 20, 0 15",
-        "M 85 50 C 75 45, 50 40, 0 30",
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
 
-        // Middle Strands
-        "M 85 50 C 65 50, 40 55, 0 50", // Main horizontal
+        // Configuration
+        const particleCount = 40; // Reduced density
+        const connectionDistance = 150;
+        const mouseDistance = 200;
 
-        // Lower Strands
-        "M 85 50 C 70 60, 50 80, 0 85",
-        "M 85 50 C 75 55, 40 70, 0 70",
+        // Mouse tracking
+        const mouse = { x: 0, y: 0 };
+        const handleMouseMove = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left;
+            mouse.y = e.clientY - rect.top;
+        };
 
-        // Divergent organic paths
-        "M 85 50 C 80 30, 40 10, 0 5",
-        "M 85 50 C 80 70, 40 90, 0 95",
-    ];
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                // Much slower, graceful movement
+                this.vx = (Math.random() - 0.5) * 0.15;
+                this.vy = (Math.random() - 0.5) * 0.15;
+                this.size = Math.random() * 2 + 0.5; // Smaller particles
+            }
 
-    // Royal Blue for signal pulses
-    const pulseColor = "#2563eb"; // Tailwind blue-600
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
 
-    return (
-        <div className="absolute inset-0 pointer-events-none z-0">
-            <svg
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-                className="w-full h-full"
-            >
-                <defs>
-                    {/* Glow Filter for Pulses */}
-                    <filter id="signal-glow" x="-50%" y="-50%" width="200%" height="200%">
-                        <feGaussianBlur stdDeviation="1" result="coloredBlur" />
-                        <feMerge>
-                            <feMergeNode in="coloredBlur" />
-                            <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                    </filter>
-                </defs>
+                // Bounce off edges
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
 
-                {paths.map((d, i) => (
-                    <g key={i}>
-                        {/* The Nerve Strand (Dark Gray, cable-like) */}
-                        <path
-                            d={d}
-                            stroke="#e5e7eb" // Gray-200, subtle structure
-                            strokeWidth="0.3"
-                            fill="none"
-                            strokeLinecap="round"
-                            opacity="0.5"
-                        />
+                // Mouse interaction - gentle push instead of strong attraction
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
 
-                        {/* The Signal Pulse (Blue, Glowing, Data Flow) */}
-                        <circle r="0.6" fill={pulseColor} filter="url(#signal-glow)">
-                            <animateMotion
-                                dur={`${3 + Math.random() * 2}s`} // Slow movement
-                                repeatCount="indefinite"
-                                path={d}
-                                keyPoints="0;1"
-                                keyTimes="0;1"
-                                calcMode="spline"
-                                keySplines="0.4 0 0.2 1" // Slow in, Slow out
-                            />
-                            {/* Pulse intensity swell */}
-                            <animate
-                                attributeName="opacity"
-                                values="0;1;0.8;0"
-                                keyTimes="0;0.1;0.9;1"
-                                dur={`${3 + Math.random() * 2}s`}
-                                repeatCount="indefinite"
-                            />
-                            <animate
-                                attributeName="r"
-                                values="0.4;0.7;0.4"
-                                dur="1.5s"
-                                repeatCount="indefinite"
-                            />
-                        </circle>
+                if (distance < mouseDistance) {
+                    const forceDirectionX = dx / distance;
+                    const forceDirectionY = dy / distance;
+                    const force = (mouseDistance - distance) / mouseDistance;
+                    const directionX = forceDirectionX * force * 0.05; // Reduced force
+                    const directionY = forceDirectionY * force * 0.05;
+                    this.vx += directionX;
+                    this.vy += directionY;
+                }
+            }
 
-                        {/* Occasional secondary data packet */}
-                        {i % 2 === 0 && (
-                            <circle r="0.3" fill={pulseColor} opacity="0.4">
-                                <animateMotion
-                                    dur={`${4 + Math.random()}s`}
-                                    repeatCount="indefinite"
-                                    path={d}
-                                    begin="1s"
-                                />
-                            </circle>
-                        )}
-                    </g>
-                ))}
-            </svg>
-        </div>
-    );
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = getComputedStyle(canvas).getPropertyValue('--particle-color').trim() || '#3b82f6';
+                ctx.fill();
+            }
+        }
+
+        const resize = () => {
+            width = canvas.width = canvas.offsetWidth;
+            height = canvas.height = canvas.offsetHeight;
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        };
+
+        const animate = () => {
+            ctx.clearRect(0, 0, width, height);
+
+            // Update and draw particles
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // Draw connections - very subtle
+            particles.forEach((a, index) => {
+                for (let i = index + 1; i < particles.length; i++) {
+                    const b = particles[i];
+                    const dx = a.x - b.x;
+                    const dy = a.y - b.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = getComputedStyle(canvas).getPropertyValue('--line-color').trim() || 'rgba(59, 130, 246, 0.05)'; // Very faint
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(a.x, a.y);
+                        ctx.lineTo(b.x, b.y);
+                        ctx.stroke();
+                        ctx.closePath();
+                    }
+                }
+            });
+
+            requestAnimationFrame(animate);
+        };
+
+        window.addEventListener('resize', resize);
+        window.addEventListener('mousemove', handleMouseMove);
+
+        resize();
+        animate();
+
+        return () => {
+            window.removeEventListener('resize', resize);
+            window.removeEventListener('mousemove', handleMouseMove);
+        };
+    }, []);
+
+    return <canvas ref={canvasRef} className="w-full h-full opacity-20 dark:opacity-30 transition-opacity duration-1000" style={{ '--particle-color': 'currentColor', '--line-color': 'currentColor' }} />;
 };
 
 export default NerveAnimation;
