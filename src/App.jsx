@@ -20,6 +20,7 @@ import { ThemeProvider } from './components/ThemeContext';
 import ProjectPage from './pages/ProjectPage';
 import TestResults from './pages/TestResults';
 import SignUp from './pages/SignUp';
+import ScrollToTop from './components/ScrollToTop';
 
 const LandingWrapper = () => {
   const [introComplete, setIntroComplete] = useState(false);
@@ -51,6 +52,7 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<LandingWrapper />} />
           <Route path="/login" element={<LoginPage />} />

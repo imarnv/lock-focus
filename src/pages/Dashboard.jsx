@@ -109,12 +109,7 @@ const Dashboard = () => {
                             Your cognitive load is optimal today. Ready to push your limits?
                         </motion.p>
 
-                        <motion.button
-                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-                            className="mt-4 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-black rounded-2xl font-bold flex items-center gap-3 hover:scale-105 transition-transform"
-                        >
-                            Resume Training <ArrowUpRight size={20} />
-                        </motion.button>
+                        {/* Resume Training button removed */}
                     </div>
 
                     {/* Right: Live Focus Card */}
