@@ -185,7 +185,7 @@ const Dashboard = () => {
 
                 {/* B. VISION STUDIO / ACCESSIBILITY CONTROLS */}
                 <div className="md:col-span-6">
-                    <Card delay={0.3} className="h-full bg-gradient-to-b from-white to-gray-50 dark:from-slate-900 dark:to-slate-950">
+                    <Card delay={0.3} className="h-full bg-gradient-to-b from-white to-gray-50 dark:from-slate-900 dark:to-slate-950 relative z-50">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
                                 <Eye className="w-6 h-6 text-purple-600 dark:text-purple-400" />
