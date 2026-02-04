@@ -57,6 +57,13 @@ const Dashboard = () => {
         { value: 'tritanopia', label: 'Tritanopia (Blue-Blind)' },
     ];
 
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good Morning";
+        if (hour < 18) return "Good Afternoon";
+        return "Good Evening";
+    };
+
     return (
         <DashboardLayout>
             {/* NEW HERO SECTION: Graceful Aurora Design */}
@@ -85,7 +92,7 @@ const Dashboard = () => {
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
                                 className="text-5xl md:text-7xl font-medium tracking-tight text-gray-900 dark:text-white"
                             >
-                                Welcome,
+                                {getGreeting()},
                             </motion.h1>
                             <motion.h1
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}

@@ -11,6 +11,9 @@ import {
     BarChart3,
     Gamepad2,
     Shield,
+    Github,
+    Heart,
+    ExternalLink,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProjectNavbar from "../components/ProjectNavbar";
@@ -269,12 +272,63 @@ const ProjectPage = () => {
             </section>
 
             {/* ================= FOOTER ================= */}
-            <footer className="py-10 text-center text-sm text-foreground/40 border-t border-foreground/10">
-                <p>
-                    Lock Focus is an assistive cognitive tool and does not replace medical
-                    diagnosis.
-                </p>
-                <p className="mt-2">&copy; 2026 Lock Focus</p>
+            <footer className="py-16 border-t border-foreground/10 bg-secondary/20">
+                <div className="container mx-auto px-6">
+                    {/* Top Section */}
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-10">
+                        {/* Branding */}
+                        <div className="flex flex-col items-center md:items-start">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Brain className="w-6 h-6 text-primary" />
+                                <span className="text-xl font-bold text-foreground">Lock Focus</span>
+                            </div>
+                            <p className="text-sm text-foreground/50 max-w-xs text-center md:text-left">
+                                An intent-aware, adaptive cognitive ecosystem for neurodiverse users.
+                            </p>
+                        </div>
+
+                        {/* Links */}
+                        <div className="flex items-center gap-6">
+                            <a
+                                href="https://github.com/imarnv/lock-focus"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 transition-colors text-foreground/70 hover:text-foreground"
+                            >
+                                <Github className="w-4 h-4" />
+                                <span className="text-sm font-medium">View Source</span>
+                                <ExternalLink className="w-3 h-3" />
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Tech Stack Badges */}
+                    <div className="flex flex-wrap justify-center gap-3 mb-8">
+                        {["React", "Vite", "TensorFlow.js", "Tailwind CSS", "Framer Motion"].map((tech) => (
+                            <span
+                                key={tech}
+                                className="px-3 py-1 text-xs font-mono rounded-full bg-primary/10 text-primary/80 border border-primary/20"
+                            >
+                                {tech}
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-t border-foreground/5 pt-6">
+                        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-foreground/40">
+                            <p>
+                                Lock Focus is an assistive cognitive tool and does not replace medical diagnosis.
+                            </p>
+                            <p className="flex items-center gap-1">
+                                Made with <Heart className="w-3 h-3 text-red-400 fill-red-400" /> for Hackathon 2026
+                            </p>
+                        </div>
+                        <p className="text-center text-xs text-foreground/30 mt-4">
+                            &copy; 2026 Lock Focus. Privacy-First by Design.
+                        </p>
+                    </div>
+                </div>
             </footer>
             <ProblemStatementModal open={isProblemOpen} onClose={() => setIsProblemOpen(false)} />
         </div>
