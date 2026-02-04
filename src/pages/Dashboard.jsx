@@ -213,22 +213,25 @@ const Dashboard = () => {
                                     colorClass="bg-green-500"
                                 />
                             </Link>
-                            <ModeButton
-                                label="Stress"
-                                icon={Activity}
-                                active={accessibilityMode === 'vision-stress'}
-                                onClick={() => toggleMode('vision-stress')}
-                                colorClass="bg-pink-500"
-                            />
                             <Link to="/peripheral-vision">
                                 <ModeButton
-                                    label="Peripheral Vision"
+                                    label="Peripheral"
                                     icon={Target}
                                     active={false}
                                     onClick={() => { }}
                                     colorClass="bg-red-500"
                                 />
                             </Link>
+                            <div className="relative group cursor-not-allowed">
+                                <div className="absolute -top-2 -right-2 z-10 bg-gray-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-white">SOON</div>
+                                <ModeButton
+                                    label="Stress"
+                                    icon={Activity}
+                                    active={false}
+                                    onClick={() => { }}
+                                    colorClass="bg-pink-500 opacity-50 grayscale"
+                                />
+                            </div>
                         </div>
 
                         {/* Color Blind Dropdown */}

@@ -14,6 +14,9 @@ import {
     Github,
     Heart,
     ExternalLink,
+    Target,
+    FileText,
+    Zap,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProjectNavbar from "../components/ProjectNavbar";
@@ -98,9 +101,18 @@ const ProjectPage = () => {
                         </button>
                     </div>
 
-                    <p className="mt-6 text-sm text-foreground/50">
-                        Includes a <b>working Dyslexia Training Game</b> and Immersive Reader
-                    </p>
+                    {/* HERO TECH STACK */}
+                    <div className="mt-12 flex flex-wrap justify-center gap-4 text-sm font-medium text-foreground/40">
+                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/50 border border-white/5">
+                            <Brain className="w-3 h-3" /> TensorFlow.js
+                        </span>
+                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/50 border border-white/5">
+                            <Eye className="w-3 h-3" /> MediaPipe Vision
+                        </span>
+                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary/50 border border-white/5">
+                            <Activity className="w-3 h-3" /> Web Audio API
+                        </span>
+                    </div>
                 </motion.div>
             </header>
 
@@ -112,28 +124,85 @@ const ProjectPage = () => {
             </section>
 
             {/* ================= JUDGE QUICK START (CTA) ================= */}
-            <section className="py-24 bg-secondary/30">
-                <div className="container mx-auto px-6 text-center">
-                    <div className="inline-block p-8 rounded-3xl bg-background border border-foreground/10 shadow-xl">
-                        <h2 className="text-3xl font-bold mb-6 flex alignItems-center justify-center gap-2">
-                            <Play className="w-6 h-6 text-primary" />
-                            Judge Quick Start (2 Minutes)
-                        </h2>
-                        <div className="grid md:grid-cols-4 gap-6 text-left">
-                            {[
-                                "1. Open Dashboard",
-                                "2. Click 'Focus Flow'",
-                                "3. Enable 'Neuro-Pilot'",
-                                "4. Test Attention Control"
-                            ].map((step, i) => (
-                                <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50">
-                                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold text-sm shrink-0">
-                                        {i + 1}
-                                    </span>
-                                    <span className="font-medium text-sm">{step.split('. ')[1]}</span>
-                                </div>
-                            ))}
+            {/* ================= JUDGE'S EVALUATION PATH (GUIDE) ================= */}
+            <section className="py-24 bg-primary/5 border-y border-primary/10 relative overflow-hidden">
+                <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:32px_32px]" />
+                <div className="container mx-auto px-6 relative z-10">
+                    <div className="text-center mb-16">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 mb-4 rounded-full bg-primary/10 text-primary border border-primary/20 text-sm font-bold">
+                            <Star className="w-4 h-4 fill-current" />
+                            For Judges
                         </div>
+                        <h2 className="text-4xl font-bold mb-4">
+                            Recommended Evaluation Path
+                        </h2>
+                        <p className="text-foreground/60 max-w-xl mx-auto">
+                            To experience the full capability of the "Lock Focus" prototype, please follow this verified testing sequence.
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-4 gap-6">
+                        {[
+                            {
+                                step: "01",
+                                title: "Neuro-Pilot",
+                                desc: "Test the AI attention steering mechanism.",
+                                action: "Go to Focus Flow",
+                                link: "/focus-flow",
+                                icon: Brain,
+                                color: "text-purple-500",
+                                bg: "bg-purple-500/10"
+                            },
+                            {
+                                step: "02",
+                                title: "PeriQuest",
+                                desc: "Verify peripheral vision training with eye tracking.",
+                                action: "Go to Peripheral",
+                                link: "/peripheral-vision",
+                                icon: Target,
+                                color: "text-red-500",
+                                bg: "bg-red-500/10"
+                            },
+                            {
+                                step: "03",
+                                title: "Adaptive Reader",
+                                desc: "Upload a PDF and see it transform instantly.",
+                                action: "Go to Reader",
+                                link: "/adaptive-reader",
+                                icon: FileText,
+                                color: "text-teal-500",
+                                bg: "bg-teal-500/10"
+                            },
+                            {
+                                step: "04",
+                                title: "Focus Scan",
+                                desc: "Measure your cognitive reflex speed.",
+                                action: "Go to Scan",
+                                link: "/focus-scan",
+                                icon: Activity,
+                                color: "text-blue-500",
+                                bg: "bg-blue-500/10"
+                            }
+                        ].map((item, i) => (
+                            <div key={i} className="relative group p-6 rounded-3xl bg-background border border-foreground/10 hover:border-primary/50 transition-all hover:-translate-y-1">
+                                <div className={`w-12 h-12 rounded-2xl ${item.bg} ${item.color} flex items-center justify-center mb-4`}>
+                                    <item.icon className="w-6 h-6" />
+                                </div>
+                                <div className="absolute top-6 right-6 text-4xl font-black text-foreground/5 font-mono">
+                                    {item.step}
+                                </div>
+                                <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+                                <p className="text-sm text-foreground/60 mb-6 h-10">
+                                    {item.desc}
+                                </p>
+                                <button
+                                    onClick={() => navigate(item.link)}
+                                    className="w-full py-3 rounded-xl border border-foreground/10 hover:bg-foreground/5 font-semibold text-sm transition-colors flex items-center justify-center gap-2 group-hover:border-primary/30"
+                                >
+                                    {item.action} <ArrowRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
@@ -170,6 +239,16 @@ const ProjectPage = () => {
                             icon: Shield,
                             title: "Privacy-First AI",
                             desc: "100% Local Processing. No video data leaves your device.",
+                        },
+                        {
+                            icon: Target,
+                            title: "PeriQuest (Vision)",
+                            desc: "Clinically-inspired peripheral vision training with Gaze Tracking.",
+                        },
+                        {
+                            icon: FileText,
+                            title: "Adaptive Reader",
+                            desc: "Transforms PDFs into Dyslexia/ADHD-friendly layouts.",
                         },
                     ].map((f, i) => (
                         <div
@@ -304,7 +383,7 @@ const ProjectPage = () => {
 
                     {/* Tech Stack Badges */}
                     <div className="flex flex-wrap justify-center gap-3 mb-8">
-                        {["React", "Vite", "TensorFlow.js", "Tailwind CSS", "Framer Motion"].map((tech) => (
+                        {["React", "Vite", "TensorFlow.js", "MediaPipe", "Tailwind CSS", "Framer Motion"].map((tech) => (
                             <span
                                 key={tech}
                                 className="px-3 py-1 text-xs font-mono rounded-full bg-primary/10 text-primary/80 border border-primary/20"
