@@ -10,6 +10,21 @@ const ADHDDashboard = () => {
     const [isFocusRulerActive, setIsFocusRulerActive] = useState(false);
     const [isFocusModeActive, setIsFocusModeActive] = useState(false);
 
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good Morning";
+        if (hour < 18) return "Good Afternoon";
+        return "Good Evening";
+    };
+
+    const dailyTips = [
+        "Use the '5-Minute Rule': Commit to just 5 minutes of work.",
+        "Body doubing (working with a friend) can boost focus.",
+        "Break large tasks into tiny, manageable steps.",
+        "Hydration affects cognitive function. Drink water!",
+    ];
+    const [tip] = useState(dailyTips[Math.floor(Math.random() * dailyTips.length)]);
+
     return (
         <DashboardLayout>
             <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-100/40 via-background to-background dark:from-amber-900/20 dark:via-background dark:to-background">
@@ -28,13 +43,13 @@ const ADHDDashboard = () => {
                                     </span>
                                 </div>
                                 <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
-                                    ADHD Support
+                                    {getGreeting()}, Friend.
                                 </h1>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <div className="glass px-4 py-2 rounded-xl flex items-center gap-3 text-sm font-medium">
+                            <div className="glass px-4 py-2 rounded-xl flex items-center gap-3 text-sm font-medium animate-pulse-slow">
                                 <Sparkles className="w-4 h-4 text-amber-500" />
                                 <span>High Focus Day</span>
                             </div>
@@ -52,11 +67,17 @@ const ADHDDashboard = () => {
                         >
                             <div className="relative z-10">
                                 <h2 className="text-3xl font-bold text-foreground mb-4 leading-tight">
-                                    Master your attention span.
+                                    Ready to master your attention?
                                 </h2>
-                                <p className="text-muted-foreground text-lg mb-8 max-w-xl leading-relaxed">
-                                    Tools designed to reduce distraction, visualize time, and gamify your focus sessions.
-                                </p>
+                                <div className="flex items-start gap-3 mb-8 p-4 bg-amber-50/50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-800/20">
+                                    <Zap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1">Daily Wisdom</p>
+                                        <p className="text-muted-foreground text-sm font-medium leading-relaxed">
+                                            "{tip}"
+                                        </p>
+                                    </div>
+                                </div>
 
                                 <div className="flex flex-wrap gap-4">
                                     <button

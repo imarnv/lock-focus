@@ -32,78 +32,139 @@ const TestStep = ({ title, description, children, onNext, isLast }) => {
 };
 
 const ReactionTimeTest = ({ onComplete }) => {
-    const [state, setState] = useState('waiting'); // waiting, ready, now, clicked, done
+    const [state, setState] = useState('waiting'); // waiting, ready, now, clicked, done, penalty
     const [startTime, setStartTime] = useState(0);
     const [times, setTimes] = useState([]);
+    const [penalties, setPenalties] = useState(0);
     const [round, setRound] = useState(1);
-    const TOTAL_ROUNDS = 5;
+    const [isTarget, setIsTarget] = useState(true); // true = GREEN (Go), false = RED (No-Go)
+
+    // Config
+    const TOTAL_ROUNDS = 8; // Increased rounds for reliability
 
     const startRound = useCallback(() => {
         setState('ready');
-        // Random delay 2-5s
+        // Random delay 1.5s - 4s
+        const delay = 1500 + Math.random() * 2500;
+
         setTimeout(() => {
+            // Randomly decide if this is a "Go" (Green) or "No-Go" (Red) trial
+            // 70% chance of "Go" (Green), 30% chance of "No-Go" (Red)
+            const isGoTrial = Math.random() > 0.3;
+            setIsTarget(isGoTrial);
             setState('now');
             setStartTime(Date.now());
-        }, 2000 + Math.random() * 3000);
+
+            // If it's a "No-Go" (Red), we need to auto-pass the round if they DON'T click after 2s
+            if (!isGoTrial) {
+                setTimeout(() => {
+                    handleNoGoSuccess();
+                }, 1500); // 1.5s window to NOT click
+            }
+        }, delay);
     }, []);
+
+    const handleNoGoSuccess = () => {
+        // User successfully inhibited (didn't click red)
+        setState(current => {
+            if (current === 'now') { // Only if they haven't clicked yet
+                nextRound();
+                return 'waiting';
+            }
+            return current;
+        });
+    };
+
+    const nextRound = () => {
+        if (round < TOTAL_ROUNDS) {
+            setState('waiting');
+            setRound(r => r + 1);
+        } else {
+            finishTest();
+        }
+    };
+
+    const finishTest = () => {
+        setState('done');
+        // Filter out any missed or weird times
+        const validTimes = times.length > 0 ? times : [500];
+        const avg = Math.round(validTimes.reduce((a, b) => a + b, 0) / validTimes.length);
+
+        // Penalty calculation: Add 100ms for each false start/wrong click
+        const finalScore = avg + (penalties * 100);
+        onComplete(finalScore);
+    };
 
     const handleClick = () => {
         if (state === 'now') {
-            const time = Date.now() - startTime;
-            const newTimes = [...times, time];
-            setTimes(newTimes);
-
-            if (round < TOTAL_ROUNDS) {
-                setState('waiting');
-                setRound(r => r + 1);
+            if (isTarget) {
+                // Correct "Go" click
+                const time = Date.now() - startTime;
+                setTimes([...times, time]);
+                nextRound();
             } else {
-                setState('done');
-                const avg = Math.round(newTimes.reduce((a, b) => a + b, 0) / newTimes.length);
-                onComplete(avg);
+                // "No-Go" Fail (Clicked Red)
+                setPenalties(p => p + 1);
+                setState('penalty'); // Show "X" or feedback
+                setTimeout(() => nextRound(), 500);
             }
         } else if (state === 'ready') {
-            setState('waiting'); // Too early
-            alert("Too early! Wait for the green.");
+            // False Start (Clicked too early)
+            setPenalties(p => p + 1);
+            alert("Too early! Wait for the signal.");
+            setState('waiting');
         }
     };
 
     return (
-        <div className="flex flex-col items-center justify-center h-64 gap-6">
-            <div className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-                Round {round} / {TOTAL_ROUNDS}
+        <div className="flex flex-col items-center justify-center h-80 gap-6">
+            <div className="flex justify-between w-full max-w-md px-4 text-sm font-bold text-gray-400 uppercase tracking-widest">
+                <span>Round {round} / {TOTAL_ROUNDS}</span>
+                <span className="text-red-400">Errors: {penalties}</span>
             </div>
 
             {state === 'waiting' && (
                 <button onClick={startRound} className="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold text-xl hover:scale-105 transition-transform shadow-lg shadow-blue-500/30">
-                    {round === 1 ? 'Start Reaction Test' : 'Next Round'}
+                    {round === 1 ? 'Start Inhibition Test' : 'Next Round'}
                 </button>
             )}
 
             {state === 'ready' && (
                 <div
                     onClick={handleClick}
-                    className="w-full h-full max-h-40 bg-red-500 rounded-2xl flex items-center justify-center cursor-pointer text-white font-bold text-2xl animate-pulse shadow-xl"
+                    className="w-full h-full max-h-48 bg-gray-200 rounded-2xl flex items-center justify-center cursor-pointer text-gray-500 font-bold text-2xl animate-pulse shadow-inner border-4 border-dashed border-gray-300"
                 >
-                    Wait for Green...
+                    Wait for proper signal...
                 </div>
             )}
 
-            {state === 'now' && (
+            {(state === 'now' || state === 'penalty') && (
                 <div
                     onClick={handleClick}
-                    className="w-full h-full max-h-40 bg-green-500 rounded-2xl flex items-center justify-center cursor-pointer text-white font-bold text-4xl shadow-xl transform scale-105 transition-transform"
+                    className={`w-full h-full max-h-48 rounded-2xl flex flex-col items-center justify-center cursor-pointer text-white font-bold text-4xl shadow-xl transform transition-all duration-100 ${state === 'penalty' ? 'bg-red-800 scale-95' :
+                            isTarget ? 'bg-green-500 scale-105' : 'bg-red-500' // Green = Go, Red = Don't Go
+                        }`}
                 >
-                    CLICK NOW!
+                    {state === 'penalty' ? (
+                        <>
+                            <span>❌</span>
+                            <span className="text-lg mt-2">Don't click RED!</span>
+                        </>
+                    ) : isTarget ? 'CLICK!' : 'AWAIT...'}
                 </div>
             )}
 
             {state === 'done' && (
                 <div className="text-center animate-bounce-in">
-                    <p className="text-lg text-gray-500 mb-2">Average Reaction Time</p>
-                    <p className="text-5xl font-black text-primary">{Math.round(times.reduce((a, b) => a + b, 0) / times.length)}ms</p>
-                    <p className="text-sm text-gray-400 mt-2">Consistency: {Math.max(...times) - Math.min(...times)}ms div</p>
+                    <p className="text-lg text-gray-500 mb-2">Cognitive Response Time</p>
+                    <p className="text-5xl font-black text-primary">{Math.round(times.reduce((a, b) => a + b, 0) / (times.length || 1))}ms</p>
+                    <p className="text-sm text-red-500 mt-2 font-bold">Inhibition Errors: {penalties}</p>
                 </div>
             )}
+
+            <p className="text-xs text-center max-w-xs text-gray-400 mt-4">
+                <strong>Instructions:</strong> Click <span className="text-green-600 font-bold">GREEN</span> boxes fast. Do <u>NOT</u> click <span className="text-red-500 font-bold">RED</span> boxes.
+            </p>
         </div>
     );
 };
