@@ -13,6 +13,7 @@ import ADHDDashboard from './pages/ADHDDashboard';
 import FocusFlow from './pages/FocusFlow';
 import SyllableSlasher from './pages/SyllableSlasher';
 import PeripheralVisionGame from './pages/PeripheralVisionGame';
+import PeriQuestGame from './pages/PeriQuestGame';
 
 import { ThemeProvider } from './components/ThemeContext';
 import ProjectPage from './pages/ProjectPage';
@@ -62,7 +63,8 @@ function App() {
           <Route path="/adhd-dashboard" element={<ADHDDashboard />} />
           <Route path="/focus-flow" element={<FocusFlow />} />
           <Route path="/syllable-slasher" element={<SyllableSlasher />} />
-          <Route path="/peripheral-vision" element={<PeripheralVisionGame />} />
+          <Route path="/peripheral-vision" element={<PeriQuestGame />} />
+          <Route path="/peripheral-vision-info" element={<PeripheralVisionGame />} />
         </Routes>
       </Router>
     </ThemeProvider>

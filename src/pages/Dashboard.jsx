@@ -222,7 +222,7 @@ const Dashboard = () => {
                             />
                             <Link to="/peripheral-vision">
                                 <ModeButton
-                                    label="PeriQuest"
+                                    label="Peripheral Vision"
                                     icon={Target}
                                     active={false}
                                     onClick={() => { }}
