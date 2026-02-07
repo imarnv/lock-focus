@@ -1,170 +1,130 @@
-# Lock Focus 🧠✨
+# Lock Focus
 > **An Intent-Aware, Adaptive Cognitive Ecosystem**
 
-**Lock Focus** is a privacy-first web platform designed to assess, track, and improve cognitive focus through adaptive AI and gamified neuro-feedback. It bridges the gap between static content and neurodiverse needs (ADHD/Dyslexia) using real-time attention signals.
+Lock Focus is a privacy-first web platform designed to assess, track, and improve cognitive focus through adaptive AI and gamified neuro-feedback. It bridges the gap between static content and neurodiverse needs (ADHD/Dyslexia) using real-time attention signals.
 
 ---
 
-## 🏗️ Architecture & Data Flow
+## Architecture and Data Flow
 
-Lock Focus runs entirely **client-side** to ensure privacy and low latency. It leverages persistent browser storage and local AI models.
+Lock Focus runs entirely client-side to ensure privacy and low latency. It leverages persistent browser storage and local AI models.
 
 ```mermaid
 graph TD
     %% Actors
-    User([👤 User]) -->|Interacts| UI[💻 Frontend Interface]
+    User([User]) -->|Interacts| UI[Frontend Interface]
 
     %% Frontend Layer
     subgraph "Frontend Layer (React)"
         UI --> Router{React Router}
-        Router -->|Route| P1[📊 ADHD Dashboard]
-        Router -->|Route| P2[🎮 Dyslexia Workspace]
-        Router -->|Route| P3[🕹️ Focus Flow Game]
-        Router -->|Route| P4[⚡ Focus Scan Test]
+        Router -->|Route| P1[ADHD Dashboard]
+        Router -->|Route| P2[Dyslexia Workspace]
+        Router -->|Route| P3[Focus Flow Game]
+        Router -->|Route| P4[Adaptive Reader]
     end
 
     %% Logic & Engine Layer
     subgraph "Engine & AI Layer (Browser-Native)"
         %% Neuro-Pilot Engine
-        P3 -->|Triggers| NP_Engine[🚀 Neuro-Pilot Engine]
-        TF[🧠 TensorFlow.js] -->|Loads| Blaze[🔥 Blazeface Model]
-        Blaze -->|Face Detection| NP_Engine
+        P3 -->|Triggers| NP_Engine[Neuro-Pilot Engine]
+        TF[TensorFlow.js] -->|Loads| Blaze[Blazeface Model]
+        Blaze -->|Head-Pose Detection| NP_Engine
         NP_Engine -->|Steering Signal| P3
 
-        %% Focus Scan Engine
-        P4 -->|Triggers| Reflex[⏱️ Reflex Analysis Engine]
-        Reflex -->|Captures| Milliseconds[ms Response Time]
-
-        %% Dyslexia Engine
-        P2 -->|Triggers| Syllable[⚔️ Syllable Slasher Engine]
-        Syllable -->|Input| WordData[Word Corpus]
-        WordData -->|Chunking| Syllable
+        %% Gaze Analytics
+        NP_Engine -->|Gaze Path| Analytics[Gaze Analytics Dashboard]
         
-        %% Immersive Reader
-        P2 -->|Triggers| Reader[📖 Immersive Reader]
-        Tess[👁️ Tesseract.js] -->|OCR| Reader
+        %% Adaptive Reader
+        P4 -->|Triggers| Reader_Engine[Attention-Aware Reader Engine]
+        Blaze -->|Gaze Signals| Reader_Engine
+        Reader_Engine -->|Visual Dimming| P4
     end
 
     %% Data Layer
     subgraph "Persistence Layer"
-        Store[(🗄️ Local Storage)]
+        Store[(Local Storage)]
         P1 -->|Reads| Store
-        Reflex -->|Writes Score| Store
+        Analytics -->|Writes Progress| Store
         P3 -->|Writes High Score| Store
     end
-
-    %% Flow Connections
-    Milliseconds -->|Calculates| Score[Cognitive Score]
-    Score --> Store
 ```
 
 ---
 
-## 🚀 Key Features (Hackathon Prototype)
+## Key Features
 
-### 1. Neuro-Pilot Mode (Focus Flow) 🕹️
-A "self-driving" game mode powered by your attention.
--   **How it works**: Uses `Blazeface` (TensorFlow.js) to detect if you are looking at the screen.
--   **The Pilot**: If you are **Focused**, the ship auto-dodges obstacles and collects points. If you **Look Away**, the ship stops, leading to a crash.
--   **Goal**: Gamifies the act of "sustaining attention" (Neurofeedback).
+### 1. Head-Pose Gaze Sensing
+The core of the ecosystem is a real-time gaze sensing engine powered by TensorFlow.js.
+- **Mechanism**: Calculates head-pose by measuring horizontal nose-to-eye alignment using BlazeFace landmarks.
+- **Accuracy**: Detects attention drift even when the user's face remains within the camera frame, providing a more realistic attention signal than simple face presence.
 
-### 2. Focus Scan ⚡
-A reaction-time and visual precision analyzer.
--   **Metrics**: Measures Reaction Time (ms) and Click Accuracy.
--   **Analysis**: Generates a "Cognitive Efficiency" score based on performance.
+### 2. Focus Flow: Progression and Training
+A high-intensity flow trainer that uses the Gaze Sensing engine for input.
+- **Neuro-Pilot Mode**: The game steers itself as long as the user maintains focus.
+- **Progression**: Five difficulty levels with scaling speed and session durations.
+- **Persistence**: Level unlocks are stored locally to track long-term progression.
 
-### 3. Syllable Slasher (Dyslexia Support) ⚔️
-A reading assistant game.
--   **Mechanism**: Breaks down complex words into readable syllables (e.g., "Un-be-liev-a-ble").
--   **Impact**: Reduces phonological processing load for dyslexic users.
+### 3. Neuro-Report Analytics
+A post-session diagnostic dashboard that provides technical proof of cognitive performance.
+- **Gaze Heatmap**: A spatial distribution map showing where the user's focus was physically directed.
+- **Neural Latency**: Estimates reflex time based on peak performance speed.
+- **Consistency Score**: Calculates the percentage of time spent in an optimal flow state.
 
-### 4. PeriQuest (Peripheral Vision Therapy) 👁️
-A clinically-inspired game for visual field expansion.
--   **Mechanism**: Tracks your eye movements using **MediaPipe Iris Tracking** (Face Landmarker).
--   **The Challenge**: Focus on a center dot while reacting to shapes appearing in your peripheral vision.
--   **AI Guard**: If you look away from the center (cheat), the center dot turns red and fixation breaks are recorded.
--   **Impact**: Trains eccentric viewing and peripheral awareness.
-
----
-
-## 🧪 Step-by-Step Judge's Walkthrough
-
-Follow this guide to test the **functional prototype**:
-
-### Step 1: Initialize the App
-1.  Open the deployed link or `http://localhost:5173`.
-2.  On the Landing Page, scroll down to the **"Vision Simulator"**.
-3.  **Try it**: Click **"Dyslexia"** or **"ADHD"** to visually experience the problem statement.
-
-### Step 2: Enter the Dashboard
-1.  Click **"Open Prototype"** or **"Dashboard"** in the navigation.
-2.  You will land on the **ADHD Dashboard**. Note the real-time "Optimal Focus" metrics.
-
-### Step 3: Test "Neuro-Pilot" (The AI Hero Feature) 🌟
-*This requires a webcam. No video is recorded; processing is 100% local.*
-1.  Click the **"Training Center"** card or go to **Games -> Focus Flow**.
-2.  **Disclaimer**: A privacy modal will appear. Click **"Enable Camera & Continue"**.
-3.  **Allow Permission**: Browser will ask for camera access. Allow it.
-4.  **Verify HUD**: Look at the top-left corner. You should see "Attention Signal: FOCUSED" (Green).
-5.  **Activate**: Click the purple **"NEURO-PILOT"** button.
-6.  **The Test**:
-    -   **Look at the screen**: The ship drives itself safely.
-    -   **Turn your head away**: The ship stops steering.
-    -   *This proves the app is reacting to your physical attention in real-time.*
-
-### Step 4: Test "Focus Scan"
-1.  Return to Dashboard -> Click **"Focus Scan"** (Top Right Card).
-2.  Click **"Start Analysis"**.
-3.  Click the grid cells as they light up green.
-4.  View your **Results** at the end (Score/Reaction Time).
-
-### Step 5: Test "PeriQuest" (New: Iris Tracking) 👁️
-1.  Go to **Games -> Peripheral Vision** (or click the Eye icon card).
-2.  **Instructions**: Read the quick guide on the start screen.
-3.  **Enable Tracking**: Click the **"Enable Eye Tracking"** button. Allow camera access.
-4.  **Verification**: You will see a **Red Gaze Cursor** on the screen. Move your eyes to verify it tracks your gaze.
-5.  **Play**:
-    -   Press **SPACE** to start.
-    -   Keep looking at the **Center Dot** (It glows Cyan).
-    -   Press **SPACE** whenever a shape appears in your side vision.
-    -   Try to "cheat" by looking at the shape - the center dot will turn **Red**, detecting your fixation break!
+### 4. Intelligent Adaptive Reader
+A reading environment that proactively responds to the user's attention.
+- **Attention Dimming**: Automatically dims and de-focuses text when an attention drift is detected.
+- **OCR Support**: Converts static PDFs into accessible, gaze-reactive documents.
 
 ---
 
-## 💡 Problem & Solution
+## Step-by-Step Walkthrough
 
-### The Problem
--   **Static Interfaces**: Traditional UIs ignore user state. They don't know if you are bored, confused, or skimming.
--   **Neurodiversity Gap**: ADHD/Dyslexic users struggle with dense text and lack of feedback.
+### Step 1: Initialize the Application
+1. Open the application at the deployed URL or `http://localhost:5173`.
+2. Scroll to the "Vision Simulator" on the landing page to view ADHD and Dyslexia simulations.
 
-### The Solution: "Lock Focus"
--   **Adaptive**: Interfaces that react to *you*.
--   **Privacy-First**: Real-time AI that runs on *your device*, not the cloud.
--   **Gamified**: Turning cognitive therapy into engaging experiences.
+### Step 2: Access the Dashboard
+1. Click "Dashboard" to enter the ADHD-focused management area.
+2. Note the focus metrics that track your session quality.
 
----
+### Step 3: Test Gaze Sensing in Focus Flow
+1. Navigate to Games -> Focus Flow.
+2. Enable the camera through the privacy-first calibration modal.
+3. Start a session in "Neuro-Pilot" mode.
+4. Verify that turning your head away causes the "Attention Signal" on the HUD to shift to "Distracted" or "Away".
 
-## 🛠️ Tech Stack
+### Step 4: Review Gaze Analytics
+1. Complete a session in Focus Flow.
+2. Analyze the Gaze Heatmap on the Neuro-Report dashboard to see your fixation patterns.
 
--   **Frontend**: React (Vite), Tailwind CSS, Framer Motion
--   **AI/ML**: TensorFlow.js (Blazeface), Google MediaPipe (Face Landmarker & Iris Tracking), Tesseract.js (OCR)
--   **Visualization**: Recharts (Analytics), Lucide React (Icons)
--   **Deployment**: Vercel / Netlify
-
----
-
-## 🔒 Privacy & Ethics Statement
-
-**Camera Usage**: The "Neuro-Pilot" feature uses the webcam solely for real-time face presence detection.
--   ✅ **Local Processing**: All video data is processed in the browser memory.
--   ✅ **No Storage**: No video or images are ever saved, stored, or transmitted to any server.
--   ✅ **Opt-In**: The feature is disabled by default and requires explicit user consent.
+### Step 5: Test the Adaptive Reader
+1. Navigate to the Reader.
+2. Enable "Neuro-Sensing" via the settings toolbar.
+3. Observe how the text dims when you look away from the document.
 
 ---
 
-## 📦 Setup Instructions (Local)
+## Tech Stack
 
-1.  **Clone**: `git clone https://github.com/imarnv/lock-focus.git`
-2.  **Install**: `npm install`
-3.  **Run**: `npm run dev`
-4.  **Visit**: `http://localhost:5173`
+- **Frontend**: React (Vite), Tailwind CSS, Framer Motion
+- **AI/ML**: TensorFlow.js (Blazeface model), Tesseract.js (OCR)
+- **Visualization**: Recharts, Canvas API (for Heatmaps)
+- **Icons**: Lucide React
+
+---
+
+## Privacy and Ethics
+
+Lock Focus is built with privacy-by-design principles:
+- **Local Processing**: All video data is processed entirely in the browser memory.
+- **No Storage**: No video or images are stored or transmitted to any server.
+- **User Consent**: Camera access is opt-in and handled via clear disclaimer modals.
+
+---
+
+## Setup Instructions
+
+1. **Clone**: `git clone https://github.com/imarnv/lock-focus.git`
+2. **Install**: `npm install`
+3. **Run**: `npm run dev`
+4. **Access**: `http://localhost:5173`

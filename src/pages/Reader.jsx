@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, Settings, Type, AlignLeft, Eye, EyeOff,
     Maximize2, Minimize2, Bold, Italic, Minus, Plus,
-    PlayCircle, PauseCircle, Download, Monitor, Move
+    PlayCircle, PauseCircle, Download, Monitor, Move, Brain
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import * as tf from '@tensorflow/tfjs';
+import * as blazeface from '@tensorflow-models/blazeface';
 
 const Reader = () => {
     const navigate = useNavigate();
@@ -30,6 +32,15 @@ const Reader = () => {
     const [isFocusMode, setIsFocusMode] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [showToolbar, setShowToolbar] = useState(true);
+    const [cameraEnabled, setCameraEnabled] = useState(false);
+    const [attentionState, setAttentionState] = useState('unknown');
+    const [showCameraPreview, setShowCameraPreview] = useState(false);
+
+    // AI Refs
+    const videoRef = useRef(null);
+    const modelRef = useRef(null);
+    const detectionIntervalRef = useRef(null);
+
 
     // Font Options
     const fonts = [
@@ -47,10 +58,82 @@ const Reader = () => {
     };
     const currentTheme = themes[settings.theme];
 
+    // Load Blazeface Model
+    useEffect(() => {
+        const loadModel = async () => {
+            try {
+                await tf.setBackend('webgl');
+                modelRef.current = await blazeface.load();
+                console.log("Reader: Blazeface model loaded");
+            } catch (err) {
+                console.error("Reader: Failed to load face model:", err);
+            }
+        };
+        loadModel();
+        return () => {
+            if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
+            window.speechSynthesis.cancel();
+        }
+    }, []);
+
+    const startDetection = () => {
+        if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
+
+        detectionIntervalRef.current = setInterval(async () => {
+            if (modelRef.current && videoRef.current && videoRef.current.readyState === 4) {
+                try {
+                    const predictions = await modelRef.current.estimateFaces(videoRef.current, false);
+                    if (predictions.length > 0) {
+                        const face = predictions[0];
+                        const landmarks = face.landmarks;
+
+                        const rEye = landmarks[0];
+                        const lEye = landmarks[1];
+                        const nose = landmarks[2];
+
+                        const eyeMidX = (rEye[0] + lEye[0]) / 2;
+                        const eyeDist = Math.abs(rEye[0] - lEye[0]);
+                        const horizontalOffset = Math.abs(nose[0] - eyeMidX);
+
+                        if (horizontalOffset > eyeDist * 0.25) {
+                            setAttentionState('distracted');
+                        } else {
+                            setAttentionState('focused');
+                        }
+                    } else {
+                        setAttentionState('away');
+                    }
+                } catch (e) { }
+            }
+        }, 300);
+    };
+
+    const toggleCamera = async () => {
+        if (cameraEnabled) {
+            const stream = videoRef.current?.srcObject;
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
+            setCameraEnabled(false);
+            setAttentionState('unknown');
+        } else {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.onloadeddata = () => startDetection();
+                }
+                setCameraEnabled(true);
+            } catch (err) {
+                alert("Camera access required for Intelligent Focus.");
+            }
+        }
+    };
+
     // Speech Synthesis
     useEffect(() => {
         window.speechSynthesis.cancel();
     }, []);
+
 
     const toggleSpeak = () => {
         if (isSpeaking) {
@@ -144,17 +227,20 @@ const Reader = () => {
                 <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    className={`w-full h-[80vh] bg-transparent outline-none resize-none transition-all duration-300 ${currentTheme.text} placeholder:opacity-20`}
+                    className={`w-full h-[80vh] bg-transparent outline-none resize-none transition-all duration-500 ${currentTheme.text} placeholder:opacity-20`}
                     style={{
                         fontSize: `${settings.fontSize}px`,
                         lineHeight: settings.lineHeight,
                         letterSpacing: `${settings.letterSpacing}px`,
                         fontFamily: fonts.find(f => f.id === settings.font)?.family,
-                        opacity: isFocusMode ? 0.8 : 1
+                        opacity: (attentionState === 'distracted' || attentionState === 'away') ? 0.2 : (isFocusMode ? 0.8 : 1),
+                        filter: (attentionState === 'distracted' || attentionState === 'away') ? 'blur(2px)' : 'none',
+                        transition: 'all 0.5s ease-in-out'
                     }}
                     placeholder="Start typing..."
                     spellCheck="false"
                 />
+
             </main>
 
             {/* Floating Toolbar - Right Side */}
@@ -241,6 +327,35 @@ const Reader = () => {
                                     <span className="text-xs font-bold">Read</span>
                                 </button>
                             </div>
+
+                            <div className={`h-px w-full ${settings.theme === 'light' ? 'bg-slate-200' : 'bg-slate-800'}`}></div>
+
+                            {/* Neuro Sensing Toggle */}
+                            <div className="space-y-4">
+                                <button
+                                    onClick={toggleCamera}
+                                    className={`w-full py-4 rounded-xl flex items-center justify-center gap-3 transition-all ${cameraEnabled ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40' : `${settings.theme === 'light' ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}`}
+                                >
+                                    <Brain className={`w-5 h-5 ${cameraEnabled ? 'animate-pulse' : ''}`} />
+                                    <div className="text-left">
+                                        <div className="text-xs font-black uppercase tracking-widest leading-none mb-1">Neuro-Sensing</div>
+                                        <div className="text-[10px] opacity-60 font-medium">{cameraEnabled ? (attentionState === 'focused' ? 'Focus Detected' : 'Attention Drift...') : 'Calibrate Eyes'}</div>
+                                    </div>
+                                </button>
+
+                                {cameraEnabled && (
+                                    <div className="relative h-24 rounded-xl overflow-hidden border border-white/10 bg-black/40">
+                                        <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover opacity-60 scale-x-[-1]" />
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className={`w-10 h-10 border border-dashed rounded-full transition-all duration-300 ${attentionState === 'focused' ? 'border-emerald-500 scale-90' : 'border-red-500 scale-110 animate-pulse'}`} />
+                                        </div>
+                                        <div className="absolute top-2 right-2 flex gap-1">
+                                            <div className={`w-1.5 h-1.5 rounded-full ${attentionState === 'focused' ? 'bg-emerald-500' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`} />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
 
                         </div>
                     </motion.div>

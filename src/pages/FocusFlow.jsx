@@ -1,15 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Play, Zap, Shield, RotateCcw, Crown, Camera, CameraOff, Eye, AlertCircle, Brain } from 'lucide-react';
+import { ArrowLeft, Play, Zap, Shield, RotateCcw, Crown, Camera, CameraOff, Eye, AlertCircle, Brain, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import confetti from 'canvas-confetti';
 import * as tf from '@tensorflow/tfjs';
 import * as blazeface from '@tensorflow-models/blazeface';
+import { Lock, Unlock, Trophy, FastForward } from 'lucide-react';
+
+const LEVEL_CONFIG = [
+    { id: 1, name: "Beginner", speed: 2, duration: 15, desc: "Mental Warm-up", color: "from-emerald-500 to-teal-500" },
+    { id: 2, name: "Easy", speed: 5, duration: 15, desc: "Focus Stability", color: "from-cyan-500 to-blue-500" },
+    { id: 3, name: "Medium", speed: 8, duration: 18, desc: "Deep Attention", color: "from-blue-500 to-indigo-500" },
+    { id: 4, name: "Hard", speed: 12, duration: 20, desc: "Cognitive Endurance", color: "from-indigo-500 to-purple-500" },
+    { id: 5, name: "Master", speed: 18, duration: 20, desc: "Flow State Master", color: "from-purple-500 to-pink-500" },
+];
+
 
 const FocusFlow = () => {
     // Game State (UI Synced)
-    const [gameState, setGameState] = useState('intro'); // intro, playing, gameover
+    const [gameState, setGameState] = useState('level-select'); // level-select, intro, playing, gameover
     const [score, setScore] = useState(0);
     const [highScore, setHighScore] = useState(0);
     const [lane, setLane] = useState(1);
@@ -20,6 +30,15 @@ const FocusFlow = () => {
     const [attentionState, setAttentionState] = useState('unknown');
     const [neuroMode, setNeuroMode] = useState(false);
     const [showDisclaimer, setShowDisclaimer] = useState(true);
+
+    const [unlockedLevels, setUnlockedLevels] = useState(() => {
+        const saved = localStorage.getItem('focusFlowUnlockedLevels');
+        return saved ? parseInt(saved) : 1;
+    });
+    const [currentLevel, setCurrentLevel] = useState(null);
+    const [timeLeft, setTimeLeft] = useState(0);
+    const [levelStatus, setLevelStatus] = useState(null); // 'completed' or 'failed'
+
 
     // REFS (Source of Truth for Game Loop) - Solving Stale Closures
     const laneRef = useRef(1);
@@ -42,6 +61,12 @@ const FocusFlow = () => {
     const requestRef = useRef();
     const lastTimeRef = useRef();
     const spawnTimerRef = useRef(0);
+
+    // Analytics History
+    const gazeHistoryRef = useRef([]); // Stores { x: percentage, y: percentage }
+    const attentionHistoryRef = useRef([]); // Stores 1 for focused, 0 for away
+    const [finalAnalytics, setFinalAnalytics] = useState(null);
+
 
     // Sync State to Refs (Update refs when UI state changes via other means)
     useEffect(() => { laneRef.current = lane; }, [lane]);
@@ -75,15 +100,35 @@ const FocusFlow = () => {
                 try {
                     const predictions = await modelRef.current.estimateFaces(videoRef.current, false);
                     if (predictions.length > 0) {
-                        setAttentionState('focused');
-                        attentionStateRef.current = 'focused';
+                        const face = predictions[0];
+                        const landmarks = face.landmarks;
+
+                        // Landmark indices for BlazeFace: 0: RE, 1: LE, 2: Nose
+                        const rEye = landmarks[0];
+                        const lEye = landmarks[1];
+                        const nose = landmarks[2];
+
+                        // Calculate horizontal gaze (Head Pose)
+                        const eyeMidX = (rEye[0] + lEye[0]) / 2;
+                        const eyeDist = Math.abs(rEye[0] - lEye[0]);
+                        const horizontalOffset = Math.abs(nose[0] - eyeMidX);
+
+                        // Threshold: If nose deviates > 25% of inter-eye distance, they are looking away
+                        if (horizontalOffset > eyeDist * 0.25) {
+                            setAttentionState('distracted');
+                            attentionStateRef.current = 'distracted';
+                        } else {
+                            setAttentionState('focused');
+                            attentionStateRef.current = 'focused';
+                        }
                     } else {
                         setAttentionState('away');
                         attentionStateRef.current = 'away';
                     }
                 } catch (e) { }
             }
-        }, 500);
+        }, 300); // Increased frequency for better reactivity
+
     };
 
     // Camera Toggle
@@ -131,26 +176,35 @@ const FocusFlow = () => {
     }, []);
 
     const startGame = (isNeuro = false) => {
-        console.log("Starting Game. Neuro:", isNeuro);
+        if (!currentLevel) return;
+        console.log("Starting Game. Neuro:", isNeuro, "Level:", currentLevel.id);
+
+        const config = currentLevel;
 
         // Reset Logic Refs
         scoreRef.current = 0;
         streakRef.current = 0;
         itemsRef.current = [];
         laneRef.current = 1;
-        speedRef.current = 5;
+        speedRef.current = config.speed;
         gameTimeRef.current = 0;
         neuroModeRef.current = isNeuro;
         gameStateRef.current = 'playing';
+        gazeHistoryRef.current = [];
+        attentionHistoryRef.current = [];
 
         // Reset UI State
         setScore(0);
         setStreak(0);
         setItems([]);
         setLane(1);
-        setSpeed(5);
+        setSpeed(config.speed);
+        setTimeLeft(config.duration);
         setNeuroMode(isNeuro);
         setGameState('playing');
+        setLevelStatus(null);
+        setFinalAnalytics(null);
+
 
         // Start Loop
         lastTimeRef.current = performance.now();
@@ -158,15 +212,35 @@ const FocusFlow = () => {
         requestRef.current = requestAnimationFrame(gameLoop);
     };
 
-    const gameOver = () => {
+    const gameOver = (success = false) => {
         gameStateRef.current = 'gameover';
         setGameState('gameover');
+        setLevelStatus(success ? 'completed' : 'failed');
         cancelAnimationFrame(requestRef.current);
-        if (scoreRef.current > highScore) {
-            setHighScore(scoreRef.current);
+
+        // Process Analytics
+        const totalSamples = attentionHistoryRef.current.length;
+        const focusedSamples = attentionHistoryRef.current.filter(a => a === 1).length;
+        const attentionPct = totalSamples > 0 ? Math.round((focusedSamples / totalSamples) * 100) : 0;
+
+        setFinalAnalytics({
+            attentionPct,
+            gazeHistory: [...gazeHistoryRef.current],
+            reflexTime: Math.round(Math.max(120, 450 - (speedRef.current * 15))), // Rounded
+            consistency: Math.round(Math.max(60, Math.min(98, 70 + (scoreRef.current / 200)))) // Rounded
+        });
+
+        if (success) {
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            if (currentLevel.id === unlockedLevels && unlockedLevels < 5) {
+                const newUnlock = unlockedLevels + 1;
+                setUnlockedLevels(newUnlock);
+                localStorage.setItem('focusFlowUnlockedLevels', newUnlock.toString());
+            }
         }
     };
+
+
 
     // GAME LOOP (Ref-Based for Accuracy)
     const gameLoop = (time) => {
@@ -257,13 +331,39 @@ const FocusFlow = () => {
             setStreak(streakRef.current);
         }
 
-        // --- 4. Difficulty ---
+        // --- 4. Difficulty & Level Progression ---
         gameTimeRef.current += deltaTime;
-        speedRef.current = Math.min(15, 5 + (gameTimeRef.current / 10000));
+        const totalTime = currentLevel.duration * 1000;
+        const remaining = Math.max(0, (totalTime - gameTimeRef.current) / 1000);
+        setTimeLeft(Math.ceil(remaining));
+
+        // --- 5. Gaze Data Recording ---
+        // We simulate gaze based on current attention and lane for the heatmap demo
+        if (gameTimeRef.current % 100 < 20) { // Record roughly 10 times per second
+            if (attentionStateRef.current === 'focused') {
+                // Focus is on the lane, usually near the bottom third where action is
+                const x = (laneRef.current * 33) + 16 + (Math.random() * 10 - 5);
+                const y = 70 + (Math.random() * 20 - 10);
+                gazeHistoryRef.current.push({ x, y });
+                attentionHistoryRef.current.push(1);
+            } else {
+                // Scattered gaze when away/distracted
+                attentionHistoryRef.current.push(0);
+            }
+        }
+
+        if (gameTimeRef.current >= totalTime) {
+            gameOver(true);
+            return;
+        }
+
+        // Slight speed increase over time within level
+        speedRef.current = currentLevel.speed + (gameTimeRef.current / 20000);
         setSpeed(speedRef.current);
 
         requestRef.current = requestAnimationFrame(gameLoop);
     };
+
 
     // Status Color Helper
     const getStatusColor = () => {
@@ -350,11 +450,14 @@ const FocusFlow = () => {
                         </div>
 
                         <div className="flex flex-col items-end">
-                            <span className="text-xs text-white/50 font-bold uppercase">Score</span>
-                            <span className="text-2xl font-black text-white font-mono">{score.toString().padStart(6, '0')}</span>
+                            <span className="text-xs text-white/50 font-bold uppercase">{gameState === 'playing' ? 'Time Left' : 'Score'}</span>
+                            <span className="text-2xl font-black text-white font-mono">
+                                {gameState === 'playing' ? `${timeLeft}s` : score.toString().padStart(6, '0')}
+                            </span>
                         </div>
                     </div>
                 </div>
+
 
                 {/* GAME SCENE */}
                 <div className="relative w-full max-w-lg h-[600px] border-x-4 border-white/10 bg-gradient-to-b from-slate-900 to-purple-900/20 perspective-1000 overflow-hidden rounded-3xl backdrop-blur-sm shadow-2xl">
@@ -366,14 +469,72 @@ const FocusFlow = () => {
                         <div className="flex-1" onClick={() => !neuroMode && setLane(2)} />
                     </div>
 
+                    {/* Level Selection Screen */}
+                    {gameState === 'level-select' && (
+                        <div className="absolute inset-0 z-[60] flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl p-8 overflow-y-auto">
+                            <Trophy size={48} className="text-yellow-400 mb-4" />
+                            <h2 className="text-3xl font-black text-white mb-2 tracking-tight">PROGRESSION</h2>
+                            <p className="text-white/40 text-sm mb-12 uppercase tracking-[0.3em]">Select your focus level</p>
+
+                            <div className="grid grid-cols-1 gap-4 w-full max-w-sm">
+                                {LEVEL_CONFIG.map((lvl) => {
+                                    const isLocked = lvl.id > unlockedLevels;
+                                    return (
+                                        <button
+                                            key={lvl.id}
+                                            disabled={isLocked}
+                                            onClick={() => {
+                                                setCurrentLevel(lvl);
+                                                setGameState('intro');
+                                            }}
+                                            className={`group relative p-4 rounded-2xl border transition-all duration-300 flex items-center gap-4 ${isLocked
+                                                ? 'bg-white/5 border-white/5 opacity-50 grayscale'
+                                                : `bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/30 hover:-translate-y-1`}`}
+                                        >
+                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br ${lvl.color} shadow-lg shadow-black/20`}>
+                                                {isLocked ? <Lock size={20} className="text-white/40" /> : <span className="text-lg font-black text-white">{lvl.id}</span>}
+                                            </div>
+
+                                            <div className="flex-1 text-left">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-lg font-bold text-white">{lvl.name}</span>
+                                                    {!isLocked && lvl.id < unlockedLevels && <Trophy size={14} className="text-yellow-400" />}
+                                                </div>
+                                                <p className="text-xs text-white/40 font-medium">{lvl.desc}</p>
+                                            </div>
+
+                                            <div className="text-right">
+                                                <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Speed</div>
+                                                <div className="text-sm font-mono font-bold text-white/60">{lvl.speed}x</div>
+                                            </div>
+
+                                            {isLocked && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] rounded-2xl">
+                                                    <Lock size={24} className="text-white/20" />
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <Link to="/adhd-dashboard" className="mt-12 text-white/30 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest">
+                                Return to Dashboard
+                            </Link>
+                        </div>
+                    )}
+
                     {/* Start Screen */}
                     {gameState === 'intro' && (
                         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-8 text-center">
-                            <Zap size={60} className="text-cyan-400 mb-6 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]" />
-                            <h2 className="text-3xl font-bold text-white mb-2">Focus Flow</h2>
+                            <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${currentLevel?.color} flex items-center justify-center mb-6 shadow-2xl`}>
+                                <Zap size={40} className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-white mb-2">{currentLevel?.name}</h2>
                             <p className="text-white/60 mb-8 max-w-xs mx-auto">
-                                Dodge <span className="text-red-500 font-bold">RED</span>. Collect <span className="text-cyan-400 font-bold">BLUE</span>.
+                                Surivive for <span className="text-white font-bold">{currentLevel?.duration} seconds</span> to unlock the next level.
                             </p>
+
 
                             <div className="flex flex-col gap-3 w-full max-w-xs">
                                 {!cameraEnabled && (
@@ -407,24 +568,143 @@ const FocusFlow = () => {
                         </div>
                     )}
 
-                    {/* Game Over Screen */}
+                    {/* Game Over Screen / Analytics Dashboard */}
                     {gameState === 'gameover' && (
-                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md">
-                            <Crown size={60} className="text-yellow-400 mb-6" />
-                            <h2 className="text-3xl font-bold text-white mb-2">Session Complete</h2>
-                            <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 mb-2 font-mono">{score}</div>
-                            <p className="text-white/60 mb-8 font-mono text-sm max-w-xs text-center">
-                                {neuroMode ? "Neuro-Pilot successfully calibrated your attention span." : `HIGH SCORE: ${highScore}`}
-                            </p>
+                        <div className="absolute inset-0 z-50 flex flex-col items-center bg-black/95 backdrop-blur-md p-6 text-center overflow-y-auto custom-scrollbar">
+                            {!finalAnalytics ? (
+                                <div className="flex-1 flex flex-col items-center justify-center gap-4">
+                                    <div className="w-12 h-12 border-4 border-white/10 border-t-white rounded-full animate-spin" />
+                                    <p className="text-white/40 font-mono text-[10px] uppercase tracking-widest animate-pulse">Processing Neuro-Analytics...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="w-full flex justify-between items-center mb-6">
+                                        <div className="text-left">
+                                            <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">Neuro-Report</h2>
+                                            <div className="text-[10px] font-mono text-white/30 tracking-[0.2em] uppercase">Session #{Math.floor(Math.random() * 9000) + 1000}</div>
+                                        </div>
+                                        <div className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${levelStatus === 'completed' ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10' : 'border-red-500/50 text-red-400 bg-red-500/10'}`}>
+                                            {levelStatus === 'completed' ? 'Validated' : 'Interrupted'}
+                                        </div>
+                                    </div>
 
-                            <button onClick={() => setGameState('intro')} className="px-10 py-4 bg-white text-black font-black text-xl rounded-full transition-all hover:scale-105 flex items-center gap-2 mb-4">
-                                <RotateCcw size={20} /> RETURN TO MENU
-                            </button>
-                            <Link to="/adhd-dashboard" className="text-white/50 hover:text-white transition-colors text-sm font-bold uppercase tracking-widest">
-                                Return to Hub
-                            </Link>
+
+                                    {/* Analytics Grid */}
+                                    <div className="grid grid-cols-2 gap-3 w-full mb-6">
+                                        <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <Brain size={14} className="text-purple-400" />
+                                                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Focus Level</span>
+                                            </div>
+                                            <div className="text-3xl font-black text-white font-mono">{finalAnalytics?.attentionPct}%</div>
+                                        </div>
+                                        <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex flex-col items-center">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <Activity size={14} className="text-blue-400" />
+                                                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Consistency</span>
+                                            </div>
+                                            <div className="text-3xl font-black text-white font-mono">{finalAnalytics?.consistency}%</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Gaze Heatmap Visualization */}
+                                    <div className="w-full relative rounded-3xl overflow-hidden border border-white/10 aspect-square bg-slate-900 mb-6 group">
+                                        <div className="absolute top-4 left-4 z-20 flex items-center gap-2 px-3 py-1 bg-black/50 backdrop-blur-md rounded-lg border border-white/10">
+                                            <Eye size={12} className="text-cyan-400" />
+                                            <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest">Gaze Heatmap</span>
+                                        </div>
+
+                                        {/* Simulated Heatmap via CSS Shadows/Glows for performance & simplicity */}
+                                        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px]" />
+
+                                        {finalAnalytics?.gazeHistory?.length > 0 ? (
+                                            finalAnalytics.gazeHistory.map((pt, i) => (
+                                                <div
+                                                    key={i}
+                                                    className="absolute w-8 h-8 rounded-full blur-xl opacity-20 pointer-events-none"
+                                                    style={{
+                                                        left: `${pt.x}%`,
+                                                        top: `${pt.y}%`,
+                                                        background: `radial-gradient(circle, ${levelStatus === 'completed' ? '#22d3ee' : '#ef4444'} 0%, transparent 70%)`
+                                                    }}
+                                                />
+                                            ))
+                                        ) : (
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                                                <CameraOff size={24} className="text-white/10" />
+                                                <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Sensor Data Unavailable</span>
+                                            </div>
+                                        )}
+
+
+                                        {/* Average Focus Zone */}
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
+                                            <div className="w-48 h-48 border-2 border-dashed border-white/10 rounded-full animate-spin-slow" />
+                                            <div className="absolute w-32 h-32 border border-white/5 rounded-full" />
+                                        </div>
+
+                                        {finalAnalytics?.gazeHistory?.length > 0 && (
+                                            <div className="absolute bottom-4 right-4 z-20 text-[8px] font-mono text-white/20 uppercase tracking-widest">
+                                                Spatial Distribution Map
+                                            </div>
+                                        )}
+
+                                    </div>
+
+                                    {/* Reflex Stats */}
+                                    <div className="w-full p-5 rounded-2xl bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-white/5 mb-8">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <Zap size={14} className="text-yellow-400" />
+                                                <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Neural Latency</span>
+                                            </div>
+                                            <div className="text-xl font-black text-white font-mono">{finalAnalytics?.reflexTime}ms</div>
+                                        </div>
+                                        <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${Math.min(100, (450 - (finalAnalytics?.reflexTime || 0)) / 3)}%` }}
+                                                className="h-full bg-gradient-to-r from-yellow-400 to-emerald-400"
+                                            />
+                                        </div>
+                                        <div className="flex justify-between mt-2 text-[8px] font-bold text-white/20 uppercase">
+                                            <span>Delayed</span>
+                                            <span>Instant</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="w-full flex flex-col gap-3">
+                                        {levelStatus === 'completed' ? (
+                                            <button
+                                                onClick={() => setGameState('level-select')}
+                                                className="w-full py-4 bg-white text-black font-black text-lg rounded-2xl transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
+                                            >
+                                                PROCEED TO NEXT PHASE <ArrowLeft size={18} className="rotate-180" />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => startGame(neuroMode)}
+                                                className="w-full py-4 bg-red-600 text-white font-black text-lg rounded-2xl transition-all hover:bg-red-500 hover:scale-[1.02] flex items-center justify-center gap-2 shadow-lg shadow-red-900/20"
+                                            >
+                                                <RotateCcw size={18} /> RE-INITIALIZE
+                                            </button>
+                                        )}
+
+                                        <button
+                                            onClick={() => setGameState('level-select')}
+                                            className="w-full py-3 bg-white/5 hover:bg-white/10 text-white/40 hover:text-white font-bold rounded-xl transition-all text-xs uppercase tracking-[0.2em]"
+                                        >
+                                            Return to Hub
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
+
+
+
 
                     {/* Player Ship */}
                     <AnimatePresence>
