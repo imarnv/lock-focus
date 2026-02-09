@@ -217,16 +217,15 @@ const Dashboard = () => {
                                     colorClass="bg-red-500"
                                 />
                             </Link>
-                            <div className="relative group cursor-not-allowed">
-                                <div className="absolute -top-2 -right-2 z-10 bg-gray-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-white">SOON</div>
+                            <Link to="/stress-dashboard">
                                 <ModeButton
                                     label="Stress"
                                     icon={Activity}
-                                    active={false}
+                                    active={accessibilityMode === 'stress'}
                                     onClick={() => { }}
-                                    colorClass="bg-pink-500 opacity-50 grayscale"
+                                    colorClass="bg-pink-500"
                                 />
-                            </div>
+                            </Link>
                         </div>
 
                         {/* Color Blind Dropdown */}
