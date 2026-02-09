@@ -14,13 +14,20 @@ Lock Focus runs entirely client-side to ensure privacy and low latency. It lever
 The ecosystem is built on a modular component architecture, ensuring separation of concerns between UI, Logic, and AI processing.
 
 ```mermaid
-graph TD
-    subgraph "Client Layer (Browser)"
-        UI[React UI Components]
-        Logic[Game & App Logic]
-        AI[AI/ML Engine]
-        Storage[Local Persistence]
+flowchart TB
+    subgraph Client ["Client Layer (Browser)"]
+        direction TB
+        UI[["React UI Components"]]
+        Logic{"Game & App Logic"}
+        AI(("AI/ML Engine<br/>TensorFlow.js"))
+        Storage[("Local Persistence")]
     end
+
+    style Client fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style UI fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    style Logic fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    style AI fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px,color:#fff
+    style Storage fill:#e0f2f1,stroke:#00695c,stroke-width:2px
 
     UI -->|Events| Logic
     Logic -->|State Updates| UI
@@ -36,26 +43,34 @@ A privacy-first pipeline where video feeds are processed instantaneously in memo
 
 ```mermaid
 sequenceDiagram
-    participant Cam as Camera Feed
-    participant Blaze as TensorFlow (Blazeface)
-    participant Engine as Attention Engine
-    participant App as Focus Flow / Reader
-    participant Store as LocalStorage
+    autonumber
+    participant Cam as 📷 Camera Feed
+    participant Blaze as 🧠 TensorFlow (Blazeface)
+    participant Engine as ⚙️ Attention Engine
+    participant App as 🎮 Focus Flow / Reader
+    participant Store as 💾 LocalStorage
 
-    Note over Cam, Store: No data leaves the device
+    Note over Cam, Store: 🔒 Privacy Barrier: No external transmission
 
     Cam->>Blaze: Raw Video Frame (60fps)
+    activate Blaze
     Blaze->>Engine: Face Landmarks (128pts)
+    deactivate Blaze
+    
+    activate Engine
     Engine->>Engine: Calculate Eye-Nose Vector
     Engine->>App: Attention State (Focused/Distracted)
+    deactivate Engine
     
+    activate App
     alt Focus Flow
         App->>App: Update Game Physics
     else Adaptive Reader
         App->>App: Adjust Text Opacity
     end
-
+    
     App-->>Store: Save Session Metrics (Async)
+    deactivate App
 ```
 
 ---
