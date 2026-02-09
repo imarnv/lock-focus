@@ -122,10 +122,10 @@ const ProjectPage = () => {
                         </button>
 
                         <button
-                            onClick={() => navigate("/download")}
-                            className="px-12 py-4 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-white font-semibold backdrop-blur-sm"
+                            onClick={() => setIsProblemOpen(true)}
+                            className="px-12 py-4 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-white font-semibold backdrop-blur-sm flex items-center gap-2"
                         >
-                            Get Chrome Extension
+                            <Target className="w-4 h-4" /> Our Mission
                         </button>
                     </motion.div>
 
@@ -163,10 +163,11 @@ const ProjectPage = () => {
 
                     <div className="grid md:grid-cols-12 gap-6">
                         {[
-                            { step: "01", title: "Neuro-Pilot", desc: "Test the AI attention steering mechanism.", link: "/focus-flow", icon: Brain, color: "text-purple-400", bg: "bg-purple-400/10", span: "md:col-span-3" },
-                            { step: "02", title: "PeriQuest", desc: "Verify peripheral vision training with eye tracking.", link: "/peripheral-vision", icon: Target, color: "text-red-400", bg: "bg-red-400/10", span: "md:col-span-3" },
-                            { step: "03", title: "Adaptive Reader", desc: "Upload a PDF and see it transform instantly.", link: "/adaptive-reader", icon: FileText, color: "text-teal-400", bg: "bg-teal-400/10", span: "md:col-span-3" },
-                            { step: "04", title: "Focus Scan", desc: "Measure your cognitive reflex speed.", link: "/focus-scan", icon: Activity, color: "text-blue-400", bg: "bg-blue-400/10", span: "md:col-span-3" }
+                            { step: "01", title: "Neuro-Pilot", desc: "Test the AI attention steering mechanism.", link: "/focus-flow", icon: Brain, color: "text-purple-400", bg: "bg-purple-400/10", span: "md:col-span-4" },
+                            { step: "02", title: "PeriQuest", desc: "Verify peripheral vision training with eye tracking.", link: "/peripheral-vision", icon: Target, color: "text-red-400", bg: "bg-red-400/10", span: "md:col-span-4" },
+                            { step: "03", title: "Chronos Match", desc: "Train internal clock and time-blindness awareness.", link: "/time-blindness", icon: Zap, color: "text-amber-400", bg: "bg-amber-400/10", span: "md:col-span-4" },
+                            { step: "04", title: "Adaptive Reader", desc: "Upload a PDF and see it transform instantly.", link: "/adaptive-reader", icon: FileText, color: "text-teal-400", bg: "bg-teal-400/10", span: "md:col-span-6" },
+                            { step: "05", title: "Focus Scan", desc: "Measure your cognitive reflex speed.", link: "/focus-scan", icon: Activity, color: "text-blue-400", bg: "bg-blue-400/10", span: "md:col-span-6" }
                         ].map((item, i) => (
                             <div key={i} className={`${item.span} group relative p-8 rounded-[32px] bg-white/[0.03] border border-white/10 hover:border-white/30 transition-all duration-500 hover:-translate-y-2 overflow-hidden`}>
                                 <div className={`w-14 h-14 rounded-2xl ${item.bg} ${item.color} flex items-center justify-center mb-6`}>

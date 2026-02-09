@@ -9,44 +9,53 @@ Lock Focus is a privacy-first web platform designed to assess, track, and improv
 
 Lock Focus runs entirely client-side to ensure privacy and low latency. It leverages persistent browser storage and local AI models.
 
+## System Architecture
+
+The ecosystem is built on a modular component architecture, ensuring separation of concerns between UI, Logic, and AI processing.
+
 ```mermaid
 graph TD
-    %% Actors
-    User([User]) -->|Interacts| UI[Frontend Interface]
-
-    %% Frontend Layer
-    subgraph "Frontend Layer (React)"
-        UI --> Router{React Router}
-        Router -->|Route| P1[ADHD Dashboard]
-        Router -->|Route| P2[Dyslexia Workspace]
-        Router -->|Route| P3[Focus Flow Game]
-        Router -->|Route| P4[Adaptive Reader]
+    subgraph "Client Layer (Browser)"
+        UI[React UI Components]
+        Logic[Game & App Logic]
+        AI[AI/ML Engine]
+        Storage[Local Persistence]
     end
 
-    %% Logic & Engine Layer
-    subgraph "Engine & AI Layer (Browser-Native)"
-        %% Neuro-Pilot Engine
-        P3 -->|Triggers| NP_Engine[Neuro-Pilot Engine]
-        TF[TensorFlow.js] -->|Loads| Blaze[Blazeface Model]
-        Blaze -->|Head-Pose Detection| NP_Engine
-        NP_Engine -->|Steering Signal| P3
+    UI -->|Events| Logic
+    Logic -->|State Updates| UI
+    Logic -->|Inference Request| AI
+    AI -->|Attention Probability| Logic
+    Logic -->|Save Progress| Storage
+    Storage -->|Load Profile| Logic
+```
 
-        %% Gaze Analytics
-        NP_Engine -->|Gaze Path| Analytics[Gaze Analytics Dashboard]
-        
-        %% Adaptive Reader
-        P4 -->|Triggers| Reader_Engine[Attention-Aware Reader Engine]
-        Blaze -->|Gaze Signals| Reader_Engine
-        Reader_Engine -->|Visual Dimming| P4
+## Data Flow Pipeline
+
+A privacy-first pipeline where video feeds are processed instantaneously in memory.
+
+```mermaid
+sequenceDiagram
+    participant Cam as Camera Feed
+    participant Blaze as TensorFlow (Blazeface)
+    participant Engine as Attention Engine
+    participant App as Focus Flow / Reader
+    participant Store as LocalStorage
+
+    Note over Cam, Store: No data leaves the device
+
+    Cam->>Blaze: Raw Video Frame (60fps)
+    Blaze->>Engine: Face Landmarks (128pts)
+    Engine->>Engine: Calculate Eye-Nose Vector
+    Engine->>App: Attention State (Focused/Distracted)
+    
+    alt Focus Flow
+        App->>App: Update Game Physics
+    else Adaptive Reader
+        App->>App: Adjust Text Opacity
     end
 
-    %% Data Layer
-    subgraph "Persistence Layer"
-        Store[(Local Storage)]
-        P1 -->|Reads| Store
-        Analytics -->|Writes Progress| Store
-        P3 -->|Writes High Score| Store
-    end
+    App-->>Store: Save Session Metrics (Async)
 ```
 
 ---
@@ -63,6 +72,12 @@ A high-intensity flow trainer that uses the Gaze Sensing engine for input.
 - **Neuro-Pilot Mode**: The game steers itself as long as the user maintains focus.
 - **Progression**: Five difficulty levels with scaling speed and session durations.
 - **Persistence**: Level unlocks are stored locally to track long-term progression.
+
+### 3. Chronos Match (Time Blindness Training)
+A rhythm-based estimation game designed to improve internal clock accuracy for ADHD users.
+- **Chaos Mode**: Simulates real-world distractions (notifications, thoughts) to train focus under pressure.
+- **Scoring**: Uses high-precision timing to measure estimation accuracy against a target duration.
+- **Streak System**: Rewards consistent timing with visual flair.
 
 ### 3. Neuro-Report Analytics
 A post-session diagnostic dashboard that provides technical proof of cognitive performance.
@@ -104,11 +119,30 @@ A reading environment that proactively responds to the user's attention.
 
 ---
 
+## Project Structure
+
+```bash
+src/
+├── components/        # Reusable UI elements (ProjectNavbar, VisionSimulator)
+├── layouts/           # Page layouts (DashboardLayout)
+├── pages/
+│   ├── FocusFlow.jsx        # Neuro-Pilot Game Logic
+│   ├── Dashboard.jsx        # ADHD Hub & Vision Studio
+│   ├── AdaptivePdfReader.jsx # Accessibility Reader
+│   ├── TimeBlindnessGame.jsx # Chronos Match
+│   ├── ProjectPage.jsx      # Landing Page
+│   └── ...
+├── utils/             # Helper functions (storage.js)
+└── App.jsx            # Routing & Entry Point
+```
+
+---
+
 ## Tech Stack
 
 - **Frontend**: React (Vite), Tailwind CSS, Framer Motion
 - **AI/ML**: TensorFlow.js (Blazeface model), Tesseract.js (OCR)
-- **Visualization**: Recharts, Canvas API (for Heatmaps)
+- **Visualization**: Recharts, Canvas API, Canvas Confetti
 - **Icons**: Lucide React
 
 ---
@@ -119,6 +153,16 @@ Lock Focus is built with privacy-by-design principles:
 - **Local Processing**: All video data is processed entirely in the browser memory.
 - **No Storage**: No video or images are stored or transmitted to any server.
 - **User Consent**: Camera access is opt-in and handled via clear disclaimer modals.
+
+## Security Features
+1.  **Strict Content Security Policy (CSP)**:
+    -   Restricts script sources to `'self'` and trusted providers (`unpkg`, `jsdelivr`).
+    -   Blocks unauthorized object/frame injections.
+2.  **Hardened Headers**:
+    -   `X-Content-Type-Options: nosniff`: Prevents MIME-sniffing attacks.
+    -   `Referrer-Policy: strict-origin-when-cross-origin`: Protects user navigation data.
+3.  **Dependency Safety**:
+    -   Minimal external dependencies, with verified CDNs for model loading.
 
 ---
 
