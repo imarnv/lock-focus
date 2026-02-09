@@ -23,6 +23,10 @@ import ProjectPage from './pages/ProjectPage';
 import TestResults from './pages/TestResults';
 import SignUp from './pages/SignUp';
 import ScrollToTop from './components/ScrollToTop';
+import StressDashboard from './pages/StressDashboard';
+import ColorMatchGame from './pages/ColorMatchGame';
+import BalloonPopGame from './pages/BalloonPopGame';
+import ZenDrive from './pages/ZenDrive';
 
 const LandingWrapper = () => {
   const [introComplete, setIntroComplete] = useState(() => {
@@ -80,6 +84,10 @@ function App() {
           <Route path="/peripheral-vision" element={<PeriQuestGame />} />
           <Route path="/peripheral-vision-info" element={<PeripheralVisionGame />} />
           <Route path="/time-blindness" element={<TimeBlindnessGame />} />
+          <Route path="/stress-dashboard" element={<StressDashboard />} />
+          <Route path="/color-match" element={<ColorMatchGame />} />
+          <Route path="/balloon-pop" element={<BalloonPopGame />} />
+          <Route path="/zen-drive" element={<ZenDrive />} />
         </Routes>
       </Router>
     </ThemeProvider>
