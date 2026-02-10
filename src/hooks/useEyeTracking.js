@@ -21,6 +21,12 @@ export function useEyeTracking() {
     const requestRef = useRef(null);
     const lastVideoTimeRef = useRef(-1);
     const gazeHistoryRef = useRef([]);
+    const trackingRef = useRef(false);
+
+    // Sync state to ref for animation loop
+    useEffect(() => {
+        trackingRef.current = isTracking;
+    }, [isTracking]);
 
     // Config
     const EYE_INDICES = {
@@ -75,6 +81,15 @@ export function useEyeTracking() {
 
         } catch (error) {
             console.error("Error starting eye tracking:", error);
+
+            let msg = "Eye Tracking Error: ";
+            if (error.name === 'NotAllowedError') msg += "Permission denied. Please allow camera access.";
+            else if (error.name === 'NotFoundError') msg += "No camera found.";
+            else if (error.name === 'NotReadableError') msg += "Camera already in use.";
+            else msg += error.message;
+
+            alert(msg);
+
             setIsLoading(false);
             setIsTracking(false);
         }
@@ -88,9 +103,9 @@ export function useEyeTracking() {
     }, []);
 
     const predictWebcam = useCallback(() => {
-        if (!landmarkerRef.current || !videoRef.current || !isTracking) return;
+        if (!landmarkerRef.current || !videoRef.current || !trackingRef.current) return;
 
-        let startTimeMs = performance.now();
+        const startTimeMs = performance.now();
         if (lastVideoTimeRef.current !== videoRef.current.currentTime) {
             lastVideoTimeRef.current = videoRef.current.currentTime;
 
@@ -99,6 +114,12 @@ export function useEyeTracking() {
             if (results.faceLandmarks && results.faceLandmarks.length > 0) {
                 setFaceDetected(true);
                 const landmarks = results.faceLandmarks[0];
+
+                // Safety Check: Ensure iris landmarks exist
+                if (!landmarks[468] || !landmarks[473]) {
+                    setFaceDetected(false);
+                    return;
+                }
 
                 // --- IRIS TRACKING LOGIC ---
                 // Left Iris Center: 468, Right Iris Center: 473
@@ -166,9 +187,9 @@ export function useEyeTracking() {
                 if (gazeHistoryRef.current.length > 5) {
                     const variance = calculateVariance(gazeHistoryRef.current);
 
-                    // Center zone check (0.35 to 0.65)
-                    const inCenter = procGazeX > 0.3 && procGazeX < 0.7 && procGazeY > 0.3 && procGazeY < 0.7;
-                    const isStable = variance < 0.05; // Tight variance
+                    // Center zone check: Tightened for better accuracy (0.4 to 0.6)
+                    const inCenter = procGazeX > 0.4 && procGazeX < 0.6 && procGazeY > 0.4 && procGazeY < 0.6;
+                    const isStable = variance < 0.03; // Even tighter variance for stability
 
                     setIsFixating(inCenter && isStable);
                 }
@@ -186,6 +207,7 @@ export function useEyeTracking() {
 
             } else {
                 setFaceDetected(false);
+                setIsFixating(false);
             }
         }
         requestRef.current = requestAnimationFrame(predictWebcam);

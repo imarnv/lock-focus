@@ -124,10 +124,16 @@ const PeriQuestGame = () => {
         correctReactions: 0,
         missedStimuli: 0,
         reactionTimes: [],
-        fieldPerformance: Object.keys(FIELD_ZONES).reduce((acc, field) => {
-            acc[field] = { correct: 0, total: 0, avgRt: 0 };
-            return acc;
-        }, {}),
+        fieldPerformance: {
+            top_left: { correct: 0, total: 0, avgRt: 0 },
+            top: { correct: 0, total: 0, avgRt: 0 },
+            top_right: { correct: 0, total: 0, avgRt: 0 },
+            left: { correct: 0, total: 0, avgRt: 0 },
+            right: { correct: 0, total: 0, avgRt: 0 },
+            bottom_left: { correct: 0, total: 0, avgRt: 0 },
+            bottom: { correct: 0, total: 0, avgRt: 0 },
+            bottom_right: { correct: 0, total: 0, avgRt: 0 }
+        },
         fixationBreaks: 0
     });
 
@@ -175,6 +181,9 @@ const PeriQuestGame = () => {
     // Spawn new stimulus
     const spawnStimulus = useCallback(() => {
         if (!gameAreaRef.current) return;
+
+        // Fixation Guard: Only spawn if fixated OR if camera is disabled
+        if (isTracking && !isFixating) return;
 
         const now = Date.now();
         const spawnInterval = CONFIG.SPAWN_INTERVALS[level] * 1000;
@@ -532,7 +541,7 @@ const PeriQuestGame = () => {
                             </motion.button>
 
                             <div className="mt-6">
-                                <Link to="/dashboard" className="text-gray-400 hover:text-white transition-colors">
+                                <Link to="/adhd-dashboard" className="text-gray-400 hover:text-white transition-colors">
                                     ← Back to Dashboard
                                 </Link>
                             </div>
@@ -585,17 +594,42 @@ const PeriQuestGame = () => {
 
                         {/* Center Fixation Dot */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+                            {/* Visual Feedback Vignette */}
+                            {!isFixating && isTracking && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(239,68,68,0.15)_100%)] shadow-[inset_0_0_100px_rgba(239,68,68,0.2)]"
+                                />
+                            )}
+
                             <motion.div
                                 animate={{
-                                    scale: isFixating || !isTracking ? [1, 1.1, 1] : [1, 1.3, 1],
+                                    scale: isFixating || !isTracking ? [1, 1.1, 1] : [1, 1.6, 1],
                                     boxShadow: isFixating || !isTracking
-                                        ? ['0 0 20px rgba(34,211,238,0.5)', '0 0 40px rgba(34,211,238,0.3)', '0 0 20px rgba(34,211,238,0.5)']
-                                        : ['0 0 20px rgba(239,68,68,0.5)', '0 0 40px rgba(239,68,68,0.3)', '0 0 20px rgba(239,68,68,0.5)']
+                                        ? ['0 0 20px rgba(34,211,238,0.5)', '0 0 50px rgba(34,211,238,0.3)', '0 0 20px rgba(34,211,238,0.5)']
+                                        : ['0 0 30px rgba(239,68,68,0.8)', '0 0 60px rgba(239,68,68,0.5)', '0 0 30px rgba(239,68,68,0.8)']
                                 }}
                                 transition={{ duration: 1.5, repeat: Infinity }}
-                                className={`w-5 h-5 rounded-full ${isFixating || !isTracking ? 'bg-cyan-400' : 'bg-red-500'
+                                className={`w-8 h-8 rounded-full border-4 flex items-center justify-center bg-slate-950 backdrop-blur-md transition-all duration-300 ${isFixating || !isTracking ? 'border-cyan-400' : 'border-red-500 scale-125'
                                     }`}
-                            />
+                            >
+                                <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${isFixating || !isTracking ? 'bg-cyan-400' : 'bg-red-500'}`} />
+                            </motion.div>
+                            {!isFixating && isTracking && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="absolute top-[calc(50%+60px)] flex flex-col items-center gap-2"
+                                >
+                                    <div className="text-[10px] font-black text-red-500 uppercase tracking-[0.3em] bg-red-500/10 px-4 py-2 rounded-full border border-red-500/30 backdrop-blur-md">
+                                        Fixation Lost: Return to Center
+                                    </div>
+                                    <div className="text-[8px] text-white/40 uppercase tracking-widest animate-pulse font-bold">
+                                        Tracking Active • Move Eyes to HUB
+                                    </div>
+                                </motion.div>
+                            )}
                         </div>
 
                         {/* Stimuli */}
@@ -782,31 +816,41 @@ const PeriQuestGame = () => {
                                     </div>
                                 </div>
 
-                                {/* Visual Field Performance */}
-                                <div className="p-6 bg-slate-800/50 rounded-2xl border border-slate-700">
-                                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                        <Eye className="w-5 h-5 text-cyan-400" />
-                                        Visual Field Performance
+                                {/* Realistic Ocular Map */}
+                                <div className="p-8 bg-black/40 rounded-[3rem] border border-white/10 relative overflow-hidden group">
+                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.05)_0%,transparent_100%)]" />
+                                    <h3 className="text-lg font-black text-white mb-8 flex items-center gap-3 uppercase italic tracking-tighter">
+                                        <Target className="w-5 h-5 text-cyan-400" />
+                                        Spatial Attention Heatmap
                                     </h3>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {['top_left', 'top', 'top_right', 'left', '', 'right', 'bottom_left', 'bottom', 'bottom_right'].map((field, i) => {
-                                            if (field === '') {
-                                                return <div key={i} className="w-full h-12 flex items-center justify-center">
-                                                    <div className="w-3 h-3 rounded-full bg-cyan-400" />
-                                                </div>;
+                                    <div className="grid grid-cols-3 gap-3 aspect-square max-w-sm mx-auto relative z-10">
+                                        {['top_left', 'top', 'top_right', 'left', 'center', 'right', 'bottom_left', 'bottom', 'bottom_right'].map((field, i) => {
+                                            if (field === 'center') {
+                                                return (
+                                                    <div key={i} className="flex flex-col items-center justify-center p-4 bg-white/5 rounded-2xl border border-white/20">
+                                                        <Eye className="w-5 h-5 text-cyan-400 opacity-50 mb-1" />
+                                                        <div className="text-[8px] font-black text-white/40 uppercase tracking-widest">Focus</div>
+                                                        <div className="text-sm font-black text-white font-mono">{accuracy}%</div>
+                                                    </div>
+                                                );
                                             }
                                             const perf = metrics.fieldPerformance[field];
                                             const acc = perf.total > 0 ? Math.round((perf.correct / perf.total) * 100) : 0;
+                                            const rt = perf.correct > 0 ? Math.round(perf.avgRt) : 0;
+
                                             return (
                                                 <div
                                                     key={field}
-                                                    className={`p-2 rounded-lg text-center text-xs ${acc >= 75 ? 'bg-green-500/20 border border-green-500/30' :
-                                                        acc >= 50 ? 'bg-amber-500/20 border border-amber-500/30' :
-                                                            'bg-red-500/20 border border-red-500/30'
+                                                    className={`p-4 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all group-hover:scale-95 ${acc >= 80 ? 'bg-emerald-500/10 border border-emerald-500/30' :
+                                                        acc >= 50 ? 'bg-amber-500/10 border border-amber-500/30' :
+                                                            'bg-red-500/10 border border-red-500/30'
                                                         }`}
                                                 >
-                                                    <div className="font-bold text-white">{acc}%</div>
-                                                    <div className="text-gray-500">{perf.total} stim</div>
+                                                    <div className="text-[8px] font-black text-white/20 uppercase tracking-tight">{field.replace('_', ' ')}</div>
+                                                    <div className={`text-xl font-black font-mono ${acc >= 80 ? 'text-emerald-400' : acc >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+                                                        {acc}%
+                                                    </div>
+                                                    <div className="text-[8px] font-mono text-white/30">{rt}ms</div>
                                                 </div>
                                             );
                                         })}
@@ -824,11 +868,11 @@ const PeriQuestGame = () => {
                                     Play Again
                                 </button>
                                 <Link
-                                    to="/dashboard"
-                                    className="px-8 py-4 bg-slate-700 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-600 transition-colors"
+                                    to="/adhd-dashboard"
+                                    className="px-8 py-4 bg-white/5 text-white font-bold rounded-[2rem] border border-white/10 flex items-center justify-center gap-2 hover:bg-white/10 transition-all uppercase tracking-widest text-xs italic"
                                 >
-                                    <ArrowLeft className="w-5 h-5" />
-                                    Back to Dashboard
+                                    <ArrowLeft className="w-4 h-4" />
+                                    Exit to Hub
                                 </Link>
                             </div>
                         </div>

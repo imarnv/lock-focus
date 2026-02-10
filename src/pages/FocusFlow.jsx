@@ -4,13 +4,11 @@ import { ArrowLeft, Play, Zap, Shield, RotateCcw, Crown, Camera, CameraOff, Eye,
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import confetti from 'canvas-confetti';
-import * as tf from '@tensorflow/tfjs';
-import * as blazeface from '@tensorflow-models/blazeface';
+import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { Lock, Unlock, Trophy, FastForward } from 'lucide-react';
-import { storage } from '../utils/storage';
 
 const LEVEL_CONFIG = [
-    { id: 1, name: "Beginner", speed: 2, duration: 15, desc: "Mental Warm-up", color: "from-emerald-500 to-teal-500" },
+    { id: 1, name: "Beginner", speed: 1.2, duration: 15, desc: "Mental Warm-up", color: "from-emerald-500 to-teal-500" },
     { id: 2, name: "Easy", speed: 5, duration: 15, desc: "Focus Stability", color: "from-cyan-500 to-blue-500" },
     { id: 3, name: "Medium", speed: 8, duration: 18, desc: "Deep Attention", color: "from-blue-500 to-indigo-500" },
     { id: 4, name: "Hard", speed: 12, duration: 20, desc: "Cognitive Endurance", color: "from-indigo-500 to-purple-500" },
@@ -39,6 +37,12 @@ const FocusFlow = () => {
     const [currentLevel, setCurrentLevel] = useState(null);
     const [timeLeft, setTimeLeft] = useState(0);
     const [levelStatus, setLevelStatus] = useState(null); // 'completed' or 'failed'
+    const [nosePosition, setNosePosition] = useState(null); // {x, y} normalized 0-1
+    const [combo, setCombo] = useState(0);
+    const [focusBar, setFocusBar] = useState(0); // 0-100
+    const [hasShield, setHasShield] = useState(false);
+    const [isShaking, setIsShaking] = useState(false);
+    const [scorePunch, setScorePunch] = useState(false);
 
 
     // REFS (Source of Truth for Game Loop) - Solving Stale Closures
@@ -52,6 +56,10 @@ const FocusFlow = () => {
     const neuroModeRef = useRef(false);
     const attentionStateRef = useRef('unknown');
     const cameraEnabledRef = useRef(false); // Fix: Track camera state in ref for loop access
+    const nosePositionRef = useRef(null); // Ref for loop access
+    const comboRef = useRef(0);
+    const focusBarRef = useRef(0);
+    const shieldRef = useRef(false);
 
     // AI / Camera Refs
     const videoRef = useRef(null);
@@ -73,85 +81,147 @@ const FocusFlow = () => {
     useEffect(() => { laneRef.current = lane; }, [lane]);
     useEffect(() => { neuroModeRef.current = neuroMode; }, [neuroMode]);
     useEffect(() => { cameraEnabledRef.current = cameraEnabled; }, [cameraEnabled]); // Sync camera state
+    useEffect(() => { gameStateRef.current = gameState; }, [gameState]); // Sync game state
 
-    // Load Blazeface Model
+    // Load MediaPipe FaceMesh Model
     useEffect(() => {
         const loadModel = async () => {
             try {
-                await tf.setBackend('webgl');
-                modelRef.current = await blazeface.load();
-                console.log("Blazeface model loaded");
+                console.log("Initializing MediaPipe Face Landmarker...");
+                const vision = await FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+                );
+                modelRef.current = await FaceLandmarker.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+                        delegate: "GPU"
+                    },
+                    outputFaceBlendshapes: false,
+                    runningMode: "VIDEO",
+                    numFaces: 1
+                });
+                console.log("FaceMesh READY \u2705");
             } catch (err) {
-                console.error("Failed to load face model:", err);
+                console.error("FaceMesh load failed:", err);
             }
         };
+
         loadModel();
+
         return () => {
-            if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
-            cancelAnimationFrame(requestRef.current);
-        }
+            if (detectionIntervalRef.current) {
+                clearInterval(detectionIntervalRef.current);
+            }
+        };
     }, []);
 
     // Face Detection Loop
+    // Face Detection Loop
     const startDetection = () => {
-        if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
+        console.log("MediaPipe Detection loop started");
+
+        if (detectionIntervalRef.current) {
+            clearInterval(detectionIntervalRef.current);
+        }
+
+        // EMA Smoothing Ref for jitter reduction
+        const smoothedNose = { x: 0.5, y: 0.5 };
+        const alpha = 0.3; // Smoothing factor (0.1 to 1)
 
         detectionIntervalRef.current = setInterval(async () => {
-            if (modelRef.current && videoRef.current && videoRef.current.readyState === 4) {
-                try {
-                    const predictions = await modelRef.current.estimateFaces(videoRef.current, false);
-                    if (predictions.length > 0) {
-                        const face = predictions[0];
-                        const landmarks = face.landmarks;
+            if (!modelRef.current || !videoRef.current) return;
+            if (videoRef.current.readyState !== 4) return;
 
-                        // Landmark indices for BlazeFace: 0: RE, 1: LE, 2: Nose
-                        const rEye = landmarks[0];
-                        const lEye = landmarks[1];
-                        const nose = landmarks[2];
+            try {
+                const startTimeMs = performance.now();
+                const results = modelRef.current.detectForVideo(videoRef.current, startTimeMs);
 
-                        // Calculate horizontal gaze (Head Pose)
-                        const eyeMidX = (rEye[0] + lEye[0]) / 2;
-                        const eyeDist = Math.abs(rEye[0] - lEye[0]);
-                        const horizontalOffset = Math.abs(nose[0] - eyeMidX);
+                if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+                    const landmarks = results.faceLandmarks[0];
 
-                        // Threshold: If nose deviates > 25% of inter-eye distance, they are looking away
-                        if (horizontalOffset > eyeDist * 0.25) {
-                            setAttentionState('distracted');
-                            attentionStateRef.current = 'distracted';
-                        } else {
-                            setAttentionState('focused');
-                            attentionStateRef.current = 'focused';
-                        }
-                    } else {
+                    // index 1 is the nose tip in MediaPipe FaceMesh
+                    const nose = landmarks[1];
+
+                    // Normalize & Mirror X
+                    const normX = 1 - nose.x;
+                    const normY = nose.y;
+
+                    // Smoothing (EMA)
+                    smoothedNose.x = smoothedNose.x * (1 - alpha) + normX * alpha;
+                    smoothedNose.y = smoothedNose.y * (1 - alpha) + normY * alpha;
+
+                    const nosePos = { x: smoothedNose.x, y: smoothedNose.y };
+
+                    // Update Refs & State (Fresh objects to avoid mutation issues)
+                    nosePositionRef.current = { x: smoothedNose.x, y: smoothedNose.y };
+                    setNosePosition({ x: smoothedNose.x, y: smoothedNose.y });
+
+                    // Refined Attention Logic for High-Precision MediaPipe
+                    // 0.45 - 0.55: Center
+                    // 0.15 - 0.45: Left
+                    // 0.55 - 0.85: Right
+                    // < 0.15 or > 0.85: AWAY (Pauses game in Neuro-Pilot)
+
+                    if (nosePos.x < 0.15 || nosePos.x > 0.85) {
                         setAttentionState('away');
                         attentionStateRef.current = 'away';
+                    } else {
+                        setAttentionState('focused');
+                        attentionStateRef.current = 'focused';
                     }
-                } catch (e) { }
+                } else {
+                    setAttentionState('away');
+                    attentionStateRef.current = 'away';
+                    setNosePosition(null);
+                    nosePositionRef.current = null;
+                }
+            } catch (err) {
+                console.error("MediaPipe detection error:", err);
             }
-        }, 300); // Increased frequency for better reactivity
-
+        }, 50); // Increased frequency for smoothness (20fps)
     };
 
     // Camera Toggle
     const toggleCamera = async () => {
-        if (cameraEnabled) {
+
+        if (cameraEnabledRef.current) {
+
             const stream = videoRef.current?.srcObject;
-            if (stream) stream.getTracks().forEach(track => track.stop());
-            if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
-            setCameraEnabled(false);
-            setAttentionState('unknown');
-            attentionStateRef.current = 'unknown';
-        } else {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                    videoRef.current.onloadeddata = () => startDetection();
-                }
-                setCameraEnabled(true);
-            } catch (err) {
-                alert("Camera access required for Attention Awareness.");
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
             }
+
+            clearInterval(detectionIntervalRef.current);
+
+            setCameraEnabled(false);
+            cameraEnabledRef.current = false;
+
+            return;
+        }
+
+        try {
+
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: 640,
+                    height: 480,
+                    facingMode: "user"
+                }
+            });
+
+            videoRef.current.srcObject = stream;
+
+            videoRef.current.onloadedmetadata = async () => {
+                await videoRef.current.play();
+                startDetection();
+            };
+
+            setCameraEnabled(true);
+            cameraEnabledRef.current = true;
+
+        } catch (err) {
+            console.error(err);
+            alert("Camera permission required");
         }
     };
 
@@ -224,26 +294,11 @@ const FocusFlow = () => {
         const focusedSamples = attentionHistoryRef.current.filter(a => a === 1).length;
         const attentionPct = totalSamples > 0 ? Math.round((focusedSamples / totalSamples) * 100) : 0;
 
-        const reflexTime = Math.round(Math.max(120, 450 - (speedRef.current * 15)));
-        const consistency = Math.round(Math.max(60, Math.min(98, 70 + (scoreRef.current / 200))));
-
-        const analytics = {
+        setFinalAnalytics({
             attentionPct,
             gazeHistory: [...gazeHistoryRef.current],
-            reflexTime,
-            consistency
-        };
-
-        setFinalAnalytics(analytics);
-
-        // Persist Session
-        storage.saveSession('focus-flow', scoreRef.current, {
-            level: currentLevel.id,
-            difficulty: currentLevel.name,
-            success,
-            neuroMode: neuroModeRef.current,
-            attentionScore: attentionPct,
-            consistency
+            reflexTime: Math.round(Math.max(120, 450 - (speedRef.current * 15))), // Rounded
+            consistency: Math.round(Math.max(60, Math.min(98, 70 + (scoreRef.current / 200)))) // Rounded
         });
 
         if (success) {
@@ -264,31 +319,63 @@ const FocusFlow = () => {
 
         const deltaTime = time - lastTimeRef.current;
         lastTimeRef.current = time;
+        gameTimeRef.current += deltaTime;
+
+        const currentAttention = attentionStateRef.current;
+        const isCameraOn = cameraEnabledRef.current;
+
+        // Update Focus Bar & Combo
+        if (isCameraOn) {
+            if (currentAttention === 'focused') {
+                focusBarRef.current = Math.min(100, focusBarRef.current + (deltaTime / 50));
+                comboRef.current += 1;
+            } else {
+                focusBarRef.current = Math.max(0, focusBarRef.current - (deltaTime / 20));
+                comboRef.current = 0;
+            }
+
+            // Grant Shield
+            if (focusBarRef.current >= 100 && !shieldRef.current) {
+                shieldRef.current = true;
+                setHasShield(true);
+            }
+
+            // Sync UI every few frames
+            if (time % 100 < 20) {
+                setFocusBar(Math.round(focusBarRef.current));
+                setCombo(Math.floor(comboRef.current / 30)); // Scale combo for display
+            }
+        }
+
+        const isPaused = neuroModeRef.current && isCameraOn && currentAttention === 'away';
+
+
+        if (isPaused) {
+            // Skip physics and spawning - Game is "stopped"
+            requestRef.current = requestAnimationFrame(gameLoop);
+            return;
+        }
 
         const currentLane = laneRef.current;
         let currentItems = [...itemsRef.current];
         const currentSpeed = speedRef.current;
-        const isCameraOn = cameraEnabledRef.current; // Use Ref for live status
-        const currentAttention = attentionStateRef.current;
 
-        // --- 1. NEURO-PILOT LOGIC (AI Steering) ---
-        if (neuroModeRef.current && isCameraOn && currentAttention === 'focused') {
-            // Look ahead for close threats
-            const threats = currentItems.filter(i => i.lane === currentLane && i.y > 40 && i.y < 90 && i.type === 'obstacle');
-            const rewards = currentItems.filter(i => i.y > 30 && i.y < 90 && i.type === 'orb');
+        // --- 1. NEURO-PILOT LOGIC (HEAD STEERING) ---
+        if (neuroModeRef.current && cameraEnabledRef.current) {
+            const nose = nosePositionRef.current;
 
-            if (threats.length > 0) {
-                // Threat incoming! Dodge!
-                const safeLanes = [0, 1, 2].filter(l => l !== currentLane);
-                const target = safeLanes[Math.floor(Math.random() * safeLanes.length)];
-                laneRef.current = target;
-                setLane(target); // Sync UI
-            } else {
-                // Orb hunting
-                const goodOrb = rewards.find(i => i.lane !== currentLane);
-                if (goodOrb) {
-                    laneRef.current = goodOrb.lane;
-                    setLane(goodOrb.lane); // Sync UI
+            if (nose) {
+                let targetLane = 1;
+
+                if (nose.x < 0.4) {
+                    targetLane = 0; // LEFT
+                } else if (nose.x > 0.6) {
+                    targetLane = 2; // RIGHT
+                }
+
+                if (targetLane !== laneRef.current) {
+                    laneRef.current = targetLane;
+                    setLane(targetLane);
                 }
             }
         }
@@ -316,14 +403,29 @@ const FocusFlow = () => {
         });
 
         if (hit) {
-            gameOver();
-            return;
+            if (shieldRef.current) {
+                shieldRef.current = false;
+                setHasShield(false);
+                focusBarRef.current = 20; // Drop focus but maintain some
+                setFocusBar(20);
+                // Temporary Invulnerability or Flash could go here
+                itemsRef.current = []; // Clear items for fresh start after save
+                setItems([]);
+            } else {
+                setIsShaking(true);
+                setTimeout(() => setIsShaking(false), 500);
+                gameOver();
+                return;
+            }
         }
 
         if (collected) {
-            scoreRef.current += 50;
+            const multiplier = 1 + Math.floor(comboRef.current / 150);
+            scoreRef.current += 50 * multiplier;
             streakRef.current = Math.min(100, streakRef.current + 10);
             setScore(scoreRef.current);
+            setScorePunch(true);
+            setTimeout(() => setScorePunch(false), 200);
             setStreak(streakRef.current);
         }
 
@@ -354,18 +456,13 @@ const FocusFlow = () => {
         setTimeLeft(Math.ceil(remaining));
 
         // --- 5. Gaze Data Recording ---
-        // We simulate gaze based on current attention and lane for the heatmap demo
+        // We simulate gaze based on nose position if available
         if (gameTimeRef.current % 100 < 20) { // Record roughly 10 times per second
-            if (attentionStateRef.current === 'focused') {
-                // Focus is on the lane, usually near the bottom third where action is
-                const x = (laneRef.current * 33) + 16 + (Math.random() * 10 - 5);
-                const y = 70 + (Math.random() * 20 - 10);
-                gazeHistoryRef.current.push({ x, y });
-                attentionHistoryRef.current.push(1);
-            } else {
-                // Scattered gaze when away/distracted
-                attentionHistoryRef.current.push(0);
-            }
+            const currentNose = nosePositionRef.current;
+            const recX = currentNose ? currentNose.x * 100 : (laneRef.current * 33) + 16;
+            const recY = currentNose ? currentNose.y * 100 : 70;
+            gazeHistoryRef.current.push({ x: recX, y: recY });
+            attentionHistoryRef.current.push(currentAttention === 'focused' ? 1 : 0);
         }
 
         if (gameTimeRef.current >= totalTime) {
@@ -421,8 +518,19 @@ const FocusFlow = () => {
                             )}
                         </div>
                         {neuroMode && (
-                            <div className="text-[10px] font-mono text-purple-400 mt-1 animate-pulse">
-                                NEURO-PILOT ACTIVE
+                            <div className="flex flex-col items-center mt-1">
+                                <div className="text-[10px] font-mono text-purple-400 animate-pulse uppercase tracking-widest">
+                                    Neuro-Pilot Active
+                                </div>
+                                {combo > 1 && (
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="text-xl font-black text-yellow-400 italic"
+                                    >
+                                        x{combo} COMBO
+                                    </motion.div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -432,19 +540,13 @@ const FocusFlow = () => {
                         {/* Feed Box */}
                         <div className="relative group">
                             <div className={`relative w-32 h-24 rounded-lg overflow-hidden border-2 bg-black/50 transition-colors duration-200 ${cameraEnabled ? (attentionState === 'focused' ? 'border-emerald-500/50' : 'border-red-500/80') : 'border-gray-700'}`}>
-                                <video ref={videoRef} autoPlay muted playsInline className={`w-full h-full object-cover transition-opacity duration-500 ${cameraEnabled ? 'opacity-60' : 'opacity-0'}`} />
+                                <video ref={videoRef} width="640" height="480" autoPlay muted playsInline className={`w-full h-full object-cover transform scale-x-[-1] transition-opacity duration-500 ${cameraEnabled ? 'opacity-60' : 'opacity-0'}`} />
 
-                                {/* Overlay UI */}
+
+                                {/* Overlay UI - Clean Visuals (No indicators per user request) */}
                                 {cameraEnabled && (
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className={`w-12 h-12 border border-dashed rounded-full flex items-center justify-center transition-all duration-200 ${attentionState === 'focused' ? 'border-emerald-400 scale-100' : 'border-red-500 scale-110'}`}>
-                                            <div className={`w-1 h-1 rounded-full ${attentionState === 'focused' ? 'bg-emerald-400' : 'bg-red-500'}`} />
-                                        </div>
-                                        {/* Corner Markers */}
-                                        <div className="absolute top-1 left-1 w-2 h-2 border-t border-l border-white/50" />
-                                        <div className="absolute top-1 right-1 w-2 h-2 border-t border-r border-white/50" />
-                                        <div className="absolute bottom-1 left-1 w-2 h-2 border-b border-l border-white/50" />
-                                        <div className="absolute bottom-1 right-1 w-2 h-2 border-b border-r border-white/50" />
+                                    <div className="absolute inset-0 pointer-events-none">
+                                        {/* Gaze-Driven Feedback Zone - Pure Camera Feed */}
                                     </div>
                                 )}
 
@@ -467,22 +569,106 @@ const FocusFlow = () => {
 
                         <div className="flex flex-col items-end">
                             <span className="text-xs text-white/50 font-bold uppercase">{gameState === 'playing' ? 'Time Left' : 'Score'}</span>
-                            <span className="text-2xl font-black text-white font-mono">
+                            <motion.span
+                                animate={scorePunch ? { scale: [1, 1.2, 1] } : {}}
+                                className="text-2xl font-black text-white font-mono"
+                            >
                                 {gameState === 'playing' ? `${timeLeft}s` : score.toString().padStart(6, '0')}
-                            </span>
+                            </motion.span>
                         </div>
                     </div>
                 </div>
 
 
                 {/* GAME SCENE */}
-                <div className="relative w-full max-w-lg h-[600px] border-x-4 border-white/10 bg-gradient-to-b from-slate-900 to-purple-900/20 perspective-1000 overflow-hidden rounded-3xl backdrop-blur-sm shadow-2xl">
+                <motion.div
+                    animate={isShaking ? { x: [-10, 10, -5, 5, 0] } : {}}
+                    transition={{ duration: 0.4 }}
+                    className="relative w-full max-w-lg h-[600px] border-x-4 border-white/10 bg-gradient-to-b from-slate-900 to-purple-900/20 perspective-1000 overflow-hidden rounded-3xl backdrop-blur-sm shadow-2xl"
+                >
+                    {/* Focus Bar HUD */}
+                    <div className="absolute top-4 left-4 right-4 h-1.5 bg-white/10 rounded-full overflow-hidden z-[70] border border-white/5">
+                        <motion.div
+                            className={`h-full bg-gradient-to-r ${hasShield ? 'from-cyan-400 to-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.8)]' : 'from-indigo-500 to-cyan-400'} relative`}
+                            animate={{ width: `${focusBar}%` }}
+                        >
+                            {/* Liquid Shimmer Effect */}
+                            <motion.div
+                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent w-full h-full"
+                                animate={{ left: ['-100%', '100%'] }}
+                                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                            />
+                        </motion.div>
+                        {hasShield && (
+                            <div className="absolute top-0 right-0 h-full flex items-center pr-2">
+                                <Shield size={8} className="text-white animate-pulse" />
+                            </div>
+                        )}
+                    </div>
 
-                    {/* Lanes */}
-                    <div className="absolute inset-0 flex">
-                        <div className="flex-1 border-r border-white/5" onClick={() => !neuroMode && setLane(0)} />
-                        <div className="flex-1 border-r border-white/5" onClick={() => !neuroMode && setLane(1)} />
-                        <div className="flex-1" onClick={() => !neuroMode && setLane(2)} />
+                    {/* Holographic 3D Cyber-Tunnel Effect */}
+                    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                        {/* Moving Floor Streaks */}
+                        {[...Array(6)].map((_, i) => (
+                            <motion.div
+                                key={`streak-${i}`}
+                                className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"
+                                initial={{ top: `${i * 20}%` }}
+                                animate={{ top: ['0%', '100%'] }}
+                                transition={{
+                                    duration: Math.max(0.5, 3 / (speed / 5)),
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                    delay: i * 0.5
+                                }}
+                            />
+                        ))}
+                        {/* Side Walls Decor */}
+                        <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-cyan-500/10 to-transparent border-r border-cyan-500/20" />
+                        <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cyan-500/10 to-transparent border-l border-cyan-500/20" />
+                    </div>
+
+                    {/* Lane Holographics & Warnings */}
+                    <div className="absolute inset-0 pointer-events-none z-10">
+                        {[0, 1, 2].map(l => {
+                            const isActive = lane === l;
+                            const hasIncomingObstacle = items.some(item => item.lane === l && item.type === 'obstacle' && item.y > 30 && item.y < 80);
+
+                            return (
+                                <React.Fragment key={l}>
+                                    {/* Lane Surface */}
+                                    <div
+                                        className={`absolute top-0 bottom-0 w-1/3 border-x border-white/5 transition-all duration-500 ${isActive ? 'bg-cyan-500/5' : 'bg-transparent'}`}
+                                        style={{ left: `${l * 33.33}%` }}
+                                    >
+                                        {/* Holographic Scanline */}
+                                        {isActive && (
+                                            <motion.div
+                                                className="absolute left-0 right-0 h-20 bg-gradient-to-b from-transparent via-cyan-400/10 to-transparent"
+                                                animate={{ top: ['-20%', '120%'] }}
+                                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                            />
+                                        )}
+                                    </div>
+
+                                    {/* Danger Warning Grid */}
+                                    {hasIncomingObstacle && (
+                                        <div
+                                            className="absolute bottom-0 w-1/3 h-1/3 overflow-hidden"
+                                            style={{ left: `${l * 33.33}%` }}
+                                        >
+                                            <motion.div
+                                                className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(239,68,68,0.3)_0%,transparent_70%)]"
+                                                animate={{ opacity: [0.4, 0.8, 0.4] }}
+                                                transition={{ duration: 0.5, repeat: Infinity }}
+                                            />
+                                            {/* Grid Lines */}
+                                            <div className="absolute inset-0 bg-[linear-gradient(rgba(239,68,68,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(239,68,68,0.2)_1px,transparent_1px)] bg-[size:20px_20px] [transform:perspective(500px)_rotateX(45deg)]" />
+                                        </div>
+                                    )}
+                                </React.Fragment>
+                            );
+                        })}
                     </div>
 
                     {/* Level Selection Screen */}
@@ -722,51 +908,71 @@ const FocusFlow = () => {
 
 
 
-                    {/* Player Ship */}
+                    {/* Player Ship / Focus Pod */}
                     <AnimatePresence>
                         {gameState !== 'intro' && (
                             <motion.div
-                                className="absolute bottom-10 w-16 h-16 bg-cyan-500 rounded-full shadow-[0_0_30px_rgba(34,211,238,0.6)] z-30 flex items-center justify-center"
-                                animate={{ left: `${(lane * 33.33) + 8.33}%` }} // Approximate center of 33% lane
+                                className="absolute bottom-10 w-16 h-16 z-30 flex items-center justify-center"
+                                animate={{ left: `${(lane * 33.33) + 8.33}%` }}
                                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
                             >
-                                <div className="w-10 h-10 bg-white rounded-full" />
+                                {/* Focus Aura */}
+                                <motion.div
+                                    className={`absolute inset-0 rounded-full border-2 ${attentionState === 'focused' ? 'border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.5)]' : 'border-red-500/50'}`}
+                                    animate={{ scale: attentionState === 'focused' ? [1, 1.2, 1] : 1 }}
+                                    transition={{ duration: 2, repeat: Infinity }}
+                                />
+                                {hasShield && (
+                                    <motion.div
+                                        className="absolute inset-[-8px] rounded-full border-4 border-emerald-400/30 ring-4 ring-emerald-400/20"
+                                        animate={{ rotate: 360 }}
+                                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                    />
+                                )}
+                                <div className={`w-12 h-12 bg-gradient-to-br ${attentionState === 'focused' ? 'from-cyan-400 to-indigo-600' : 'from-slate-700 to-slate-800'} rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.5)] flex items-center justify-center transform rotate-45 border border-cyan-400/30 transition-all duration-500`}>
+                                    <Eye size={20} className={`text-white transform -rotate-45 ${attentionState === 'focused' ? 'animate-pulse' : 'opacity-40'}`} />
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
 
                     {/* Falling Items */}
-                    {items.map(item => (
-                        <div
-                            key={item.id}
-                            className={`absolute w-12 h-12 rounded-lg z-20 flex items-center justify-center transition-transform ${item.type === 'obstacle' ? 'scale-100' : 'scale-75 animate-pulse'}`}
-                            style={{
-                                top: `${item.y}%`,
-                                left: `${(item.lane * 33.33) + 10}%`,
-                                opacity: item.y < 0 ? 0 : 1
-                            }}
-                        >
-                            {item.type === 'obstacle' ? (
-                                <div className="w-full h-full bg-red-500 rotate-45 shadow-[0_0_20px_rgba(239,68,68,0.6)]" />
-                            ) : (
-                                <div className="w-full h-full bg-cyan-400 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.8)] border-2 border-white" />
-                            )}
-                        </div>
-                    ))}
+                    {items.map(item => {
+                        const isClose = item.y > 60;
+                        const isOrb = item.type === 'orb';
+                        const isObstacle = item.type === 'obstacle';
+                        const inSuctionRange = isOrb && item.y > 70 && item.lane === lane;
 
-                    {/* Lane Highlights */}
-                    <div className="absolute inset-0 pointer-events-none">
-                        <div className={`absolute top-0 bottom-0 left-0 w-1/3 bg-white/5 transition-opacity duration-300 ${lane === 0 ? 'opacity-100' : 'opacity-0'}`} />
-                        <div className={`absolute top-0 bottom-0 left-1/3 w-1/3 bg-white/5 transition-opacity duration-300 ${lane === 1 ? 'opacity-100' : 'opacity-0'}`} />
-                        <div className={`absolute top-0 bottom-0 right-0 w-1/3 bg-white/5 transition-opacity duration-300 ${lane === 2 ? 'opacity-100' : 'opacity-0'}`} />
-                    </div>
+                        return (
+                            <motion.div
+                                key={item.id}
+                                className="absolute w-12 h-12 z-20 flex items-center justify-center"
+                                animate={{
+                                    top: `${item.y}%`,
+                                    left: inSuctionRange ? `${(lane * 33.33) + 10}%` : `${(item.lane * 33.33) + 10}%`,
+                                    scale: isObstacle && isClose ? [1, 1.1, 0.9, 1] : 1,
+                                    x: isObstacle && isClose ? [0, -2, 2, 0] : 0
+                                }}
+                                transition={{
+                                    type: inSuctionRange ? "spring" : "tween",
+                                    stiffness: 200,
+                                    duration: inSuctionRange ? 0.3 : 0
+                                }}
+                            >
+                                {isObstacle ? (
+                                    <div className={`w-full h-full bg-red-500 rotate-45 shadow-[0_0_20px_rgba(239,68,68,0.6)] border border-red-400/50 ${isClose ? 'animate-pulse' : ''}`} >
+                                        <div className="absolute inset-2 border border-white/20 rounded-sm" />
+                                    </div>
+                                ) : (
+                                    <div className="w-full h-full bg-cyan-400 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.8)] border-2 border-white flex items-center justify-center">
+                                        <div className="w-4 h-4 bg-white rounded-full animate-ping" />
+                                    </div>
+                                )}
+                            </motion.div>
+                        );
+                    })}
 
-                    {/* Attention Overlay (Distraction Effect) */}
-                    {cameraEnabled && attentionState === 'distracted' && (
-                        <div className="absolute inset-0 bg-yellow-500/10 pointer-events-none animate-pulse z-10" />
-                    )}
-
-                </div>
+                </motion.div>
 
                 {/* Privacy Disclaimer Modal */}
                 <AnimatePresence>
@@ -814,11 +1020,13 @@ const FocusFlow = () => {
                                             }}
                                             className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
                                         >
-                                            <Camera size={18} /> Enable & Continue
+                                            <Camera size={18} />
+                                            Enable Camera & Continue
                                         </button>
+
                                         <button
                                             onClick={() => setShowDisclaimer(false)}
-                                            className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors text-sm"
+                                            className="w-full py-3 bg-transparent hover:bg-white/5 text-slate-400 hover:text-white font-medium rounded-xl transition-colors text-xs uppercase tracking-widest"
                                         >
                                             Continue Without Camera
                                         </button>
@@ -829,6 +1037,9 @@ const FocusFlow = () => {
                     )}
                 </AnimatePresence>
 
+                <div className="mt-8 text-white/30 text-xs font-mono">
+                    [LEFT/RIGHT ARROW] or [TAP LANES] to move
+                </div>
             </div>
         </DashboardLayout>
     );
