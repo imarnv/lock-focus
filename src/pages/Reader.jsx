@@ -73,6 +73,15 @@ const Reader = () => {
         return () => {
             if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
             window.speechSynthesis.cancel();
+
+            // Ensure camera is stopped on unmount
+            if (videoRef.current && videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject;
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log("Reader Cleanup: Stopped track:", track.label);
+                });
+            }
         }
     }, []);
 
@@ -110,21 +119,53 @@ const Reader = () => {
 
     const toggleCamera = async () => {
         if (cameraEnabled) {
+            console.log("Reader: Stopping camera...");
             const stream = videoRef.current?.srcObject;
-            if (stream) stream.getTracks().forEach(track => track.stop());
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log("Reader: Stopped track:", track.label);
+                });
+                videoRef.current.srcObject = null;
+            }
             if (detectionIntervalRef.current) clearInterval(detectionIntervalRef.current);
             setCameraEnabled(false);
             setAttentionState('unknown');
         } else {
+            console.log("Reader: Requesting camera access...");
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error("Browser API navigator.mediaDevices.getUserMedia not available");
+                }
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: 320,
+                        height: 240,
+                        facingMode: 'user'
+                    }
+                });
+
+                console.log("Reader: Camera access granted:", stream.id);
+
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
-                    videoRef.current.onloadeddata = () => startDetection();
+                    videoRef.current.onloadeddata = () => {
+                        console.log("Reader: Video loaded, starting detection...");
+                        startDetection();
+                    };
                 }
                 setCameraEnabled(true);
             } catch (err) {
-                alert("Camera access required for Intelligent Focus.");
+                console.error("Reader: Camera Error:", err);
+                let msg = "Camera access failed. ";
+                if (err.name === 'NotAllowedError') msg += "Permission denied. Please allow camera access in your browser settings.";
+                else if (err.name === 'NotFoundError') msg += "No camera device found.";
+                else if (err.name === 'NotReadableError') msg += "Camera is already in use by another application.";
+                else msg += err.message;
+
+                alert(msg);
+                setCameraEnabled(false);
             }
         }
     };
