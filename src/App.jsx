@@ -27,7 +27,7 @@ const DyslexiaGame = React.lazy(() => import('./pages/DyslexiaGame'));
 const SyllableSlasher = React.lazy(() => import('./pages/SyllableSlasher'));
 const PeripheralVisionGame = React.lazy(() => import('./pages/PeripheralVisionGame'));
 const ProjectPage = React.lazy(() => import('./pages/ProjectPage'));
-const UserProfile = React.lazy(() => import('./pages/UserProfile'));
+const ChatbotPage = React.lazy(() => import('./pages/ChatbotPage'));
 
 const LandingWrapper = () => {
   const [introComplete, setIntroComplete] = useState(() => {
@@ -74,8 +74,8 @@ function App() {
           </div>
         }>
           <Routes>
-            <Route path="/" element={<LoginPage />} />
-            <Route path="/home" element={<LandingWrapper />} />
+            <Route path="/" element={<LandingWrapper />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/download" element={<DownloadPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
@@ -95,7 +95,7 @@ function App() {
             <Route path="/color-match" element={<ColorMatchGame />} />
             <Route path="/balloon-pop" element={<BalloonPopGame />} />
             <Route path="/zen-drive" element={<ZenDrive />} />
-            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/adhd-chatbot" element={<ChatbotPage />} />
           </Routes>
         </React.Suspense>
       </Router>
