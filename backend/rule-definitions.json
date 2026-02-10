@@ -1,0 +1,959 @@
+{
+    "rules": [
+        {
+            "id": 1,
+            "category": "calming",
+            "priority": 10,
+            "triggers": [
+                "panic",
+                "panicking",
+                "freaking out",
+                "anxious",
+                "anxiety attack"
+            ],
+            "response": "Take a deep breath with me 😌. You're not alone – let's break this down. Inhale for 4, hold for 4, exhale for 4. 🌬️",
+            "action": "calming_breathing"
+        },
+        {
+            "id": 2,
+            "category": "calming",
+            "priority": 10,
+            "triggers": [
+                "overwhelmed",
+                "too much",
+                "can't handle"
+            ],
+            "response": "I hear you – that's a lot on your plate. Let's tackle this one tiny step at a time. What feels most urgent right now?",
+            "action": "parse_tasks_urgent"
+        },
+        {
+            "id": 3,
+            "category": "calming",
+            "priority": 9,
+            "triggers": [
+                "failure",
+                "failed",
+                "rejected",
+                "rejection"
+            ],
+            "response": "That's tough, but it's not you – it's a moment. You've got strengths like creativity and unique perspectives. What's one win from today? 🌟",
+            "action": "affirmation"
+        },
+        {
+            "id": 4,
+            "category": "calming",
+            "priority": 8,
+            "triggers": [
+                "tired",
+                "exhausted",
+                "burnt out",
+                "burnout"
+            ],
+            "response": "Sounds like your brain needs a recharge. Try a 5-min eye-tracking break in Lock Focus to build focus stamina without draining you further.",
+            "action": "suggest_game_focus_flow"
+        },
+        {
+            "id": 5,
+            "category": "calming",
+            "priority": 9,
+            "triggers": [
+                "angry at myself",
+                "hate myself",
+                "stupid"
+            ],
+            "response": "Self-compassion time: ADHD brains work differently, and that's okay. 😊 You're not broken – you're wired for different strengths.",
+            "action": "affirmation"
+        },
+        {
+            "id": 6,
+            "category": "calming",
+            "priority": 8,
+            "triggers": [
+                "crying",
+                "tears",
+                "want to cry"
+            ],
+            "response": "It's okay to feel this way. Emotions are valid. Take a moment to breathe. I'm here when you're ready to talk. 💙",
+            "action": "emotional_support"
+        },
+        {
+            "id": 7,
+            "category": "calming",
+            "priority": 10,
+            "triggers": [
+                "hopeless",
+                "give up",
+                "can't do this"
+            ],
+            "response": "I'm not a doctor, but please reach out to a helpline if you need immediate support. Let's focus on what I can help with now – what's one small thing we can tackle together?",
+            "action": "safety_net"
+        },
+        {
+            "id": 8,
+            "category": "calming",
+            "priority": 7,
+            "triggers": [
+                "frustrated",
+                "frustrating",
+                "annoyed"
+            ],
+            "response": "Frustration is your brain saying 'this is hard.' That's valid! Let's find a different angle. What part is tripping you up?",
+            "action": "problem_solving"
+        },
+        {
+            "id": 9,
+            "category": "calming",
+            "priority": 8,
+            "triggers": [
+                "scared",
+                "afraid",
+                "nervous"
+            ],
+            "response": "Fear is just your brain trying to protect you. Let's ground ourselves: name 3 things you can see, 2 you can touch, 1 you can hear. 🌿",
+            "action": "grounding_exercise"
+        },
+        {
+            "id": 10,
+            "category": "calming",
+            "priority": 7,
+            "triggers": [
+                "stressed",
+                "stress",
+                "stressful"
+            ],
+            "response": "Stress is real, but we can manage it. Quick reset: try a 2-minute PeriQuest game to shift your brain's focus. 🎯",
+            "action": "suggest_game_periquest"
+        },
+        {
+            "id": 11,
+            "category": "calming",
+            "priority": 6,
+            "triggers": [
+                "lonely",
+                "alone",
+                "isolated"
+            ],
+            "response": "You're not alone in this. The ADHD community is huge and supportive. I'm here with you right now. 💫",
+            "action": "emotional_support"
+        },
+        {
+            "id": 12,
+            "category": "calming",
+            "priority": 7,
+            "triggers": [
+                "embarrassed",
+                "ashamed",
+                "humiliated"
+            ],
+            "response": "Everyone makes mistakes – it's how brains learn. ADHD just makes some things trickier. You're doing your best. 🌟",
+            "action": "affirmation"
+        },
+        {
+            "id": 13,
+            "category": "calming",
+            "priority": 8,
+            "triggers": [
+                "racing thoughts",
+                "mind racing",
+                "can't stop thinking"
+            ],
+            "response": "Racing thoughts are common with ADHD. Let's do a brain dump: write down everything on your mind, then we'll sort it. 📝",
+            "action": "brain_dump_prompt"
+        },
+        {
+            "id": 14,
+            "category": "calming",
+            "priority": 6,
+            "triggers": [
+                "restless",
+                "can't sit still",
+                "fidgety"
+            ],
+            "response": "Movement helps ADHD brains! Try a quick walk or some stretches. Physical activity can actually boost focus. 🚶",
+            "action": "movement_suggestion"
+        },
+        {
+            "id": 15,
+            "category": "calming",
+            "priority": 7,
+            "triggers": [
+                "shutdown",
+                "shutting down",
+                "can't think"
+            ],
+            "response": "Sounds like cognitive overload. Step away for 5 minutes – no screens. Just breathe. Your brain needs a reset. 🧘",
+            "action": "break_suggestion"
+        },
+        {
+            "id": 16,
+            "category": "calming",
+            "priority": 6,
+            "triggers": [
+                "guilty",
+                "guilt",
+                "feel bad"
+            ],
+            "response": "Guilt doesn't help – action does. What's one tiny thing you can do right now to move forward? 🌱",
+            "action": "action_prompt"
+        },
+        {
+            "id": 17,
+            "category": "calming",
+            "priority": 7,
+            "triggers": [
+                "disappointed",
+                "let down",
+                "letdown"
+            ],
+            "response": "Disappointment is tough. But remember: progress isn't linear. What did you learn from this? 📚",
+            "action": "reflection_prompt"
+        },
+        {
+            "id": 18,
+            "category": "calming",
+            "priority": 6,
+            "triggers": [
+                "worried",
+                "worrying",
+                "worry"
+            ],
+            "response": "Worry is your brain trying to plan. Let's channel that: what's the worst case? Best case? Most likely case? 🤔",
+            "action": "worry_analysis"
+        },
+        {
+            "id": 19,
+            "category": "calming",
+            "priority": 7,
+            "triggers": [
+                "meltdown",
+                "having a meltdown",
+                "losing it"
+            ],
+            "response": "Meltdowns happen. You're safe. Focus on your breath. In through nose, out through mouth. Repeat. 🌊",
+            "action": "calming_breathing"
+        },
+        {
+            "id": 20,
+            "category": "calming",
+            "priority": 6,
+            "triggers": [
+                "numb",
+                "feeling nothing",
+                "empty"
+            ],
+            "response": "Emotional numbness can be a sign of burnout. Please consider talking to a professional. For now, let's focus on small, gentle tasks. 🕊️",
+            "action": "gentle_task_mode"
+        },
+        {
+            "id": 21,
+            "category": "task_parsing",
+            "priority": 9,
+            "triggers": [
+                "need to",
+                "have to",
+                "must",
+                "should"
+            ],
+            "response": "I see you've got tasks on your mind. Let me help organize them by priority.",
+            "action": "parse_tasks"
+        },
+        {
+            "id": 22,
+            "category": "task_parsing",
+            "priority": 10,
+            "triggers": [
+                "exam",
+                "test",
+                "quiz"
+            ],
+            "response": "Exam detected! This is high priority. Let's break down your study plan.",
+            "action": "parse_tasks_high"
+        },
+        {
+            "id": 23,
+            "category": "task_parsing",
+            "priority": 10,
+            "triggers": [
+                "meds",
+                "medication",
+                "pills",
+                "prescription"
+            ],
+            "response": "Medication is urgent! Set a phone alarm now. For forgetting, link it to a habit like breakfast. ⏰",
+            "action": "urgent_reminder"
+        },
+        {
+            "id": 24,
+            "category": "task_parsing",
+            "priority": 9,
+            "triggers": [
+                "deadline",
+                "due",
+                "tomorrow",
+                "today"
+            ],
+            "response": "Deadline alert! Let's prioritize this as high urgency.",
+            "action": "parse_tasks_high"
+        },
+        {
+            "id": 25,
+            "category": "task_parsing",
+            "priority": 7,
+            "triggers": [
+                "email",
+                "message",
+                "text",
+                "call"
+            ],
+            "response": "Communication tasks noted. I'll categorize these based on urgency.",
+            "action": "parse_tasks_medium"
+        },
+        {
+            "id": 26,
+            "category": "task_parsing",
+            "priority": 6,
+            "triggers": [
+                "clean",
+                "laundry",
+                "dishes",
+                "organize"
+            ],
+            "response": "Household tasks detected. These are usually lower priority unless there's a specific deadline.",
+            "action": "parse_tasks_low"
+        },
+        {
+            "id": 27,
+            "category": "task_parsing",
+            "priority": 8,
+            "triggers": [
+                "work",
+                "project",
+                "assignment"
+            ],
+            "response": "Work task identified. Let's assess the deadline and break it into steps.",
+            "action": "parse_tasks_high"
+        },
+        {
+            "id": 28,
+            "category": "task_parsing",
+            "priority": 7,
+            "triggers": [
+                "appointment",
+                "meeting",
+                "schedule"
+            ],
+            "response": "Time-sensitive event! Let's make sure this is in your calendar with reminders.",
+            "action": "calendar_reminder"
+        },
+        {
+            "id": 29,
+            "category": "task_parsing",
+            "priority": 6,
+            "triggers": [
+                "shopping",
+                "groceries",
+                "buy"
+            ],
+            "response": "Shopping task noted. I'll add this to your list with medium priority.",
+            "action": "parse_tasks_medium"
+        },
+        {
+            "id": 30,
+            "category": "task_parsing",
+            "priority": 8,
+            "triggers": [
+                "study",
+                "read",
+                "review"
+            ],
+            "response": "Study task detected. Let's use the Pomodoro technique: 25 min focus + 5 min break.",
+            "action": "study_plan"
+        },
+        {
+            "id": 31,
+            "category": "task_parsing",
+            "priority": 7,
+            "triggers": [
+                "pay",
+                "bill",
+                "payment"
+            ],
+            "response": "Financial task! This is important. Set a reminder to avoid late fees.",
+            "action": "parse_tasks_high"
+        },
+        {
+            "id": 32,
+            "category": "task_parsing",
+            "priority": 6,
+            "triggers": [
+                "exercise",
+                "workout",
+                "gym"
+            ],
+            "response": "Self-care task! Important for ADHD management. When can you fit this in?",
+            "action": "parse_tasks_medium"
+        },
+        {
+            "id": 33,
+            "category": "task_parsing",
+            "priority": 5,
+            "triggers": [
+                "hobby",
+                "fun",
+                "relax"
+            ],
+            "response": "Leisure time is important too! Let's make sure you schedule this.",
+            "action": "parse_tasks_low"
+        },
+        {
+            "id": 34,
+            "category": "task_parsing",
+            "priority": 8,
+            "triggers": [
+                "doctor",
+                "dentist",
+                "therapy"
+            ],
+            "response": "Health appointment! High priority. Make sure you have reminders set.",
+            "action": "parse_tasks_high"
+        },
+        {
+            "id": 35,
+            "category": "task_parsing",
+            "priority": 7,
+            "triggers": [
+                "prepare",
+                "pack",
+                "get ready"
+            ],
+            "response": "Preparation task noted. Let's create a checklist to avoid last-minute panic.",
+            "action": "checklist_creation"
+        },
+        {
+            "id": 36,
+            "category": "task_parsing",
+            "priority": 6,
+            "triggers": [
+                "fix",
+                "repair",
+                "maintenance"
+            ],
+            "response": "Maintenance task. Unless urgent, this can be scheduled for later.",
+            "action": "parse_tasks_low"
+        },
+        {
+            "id": 37,
+            "category": "task_parsing",
+            "priority": 8,
+            "triggers": [
+                "submit",
+                "send",
+                "upload"
+            ],
+            "response": "Submission task! Time-sensitive. Let's prioritize this.",
+            "action": "parse_tasks_high"
+        },
+        {
+            "id": 38,
+            "category": "task_parsing",
+            "priority": 7,
+            "triggers": [
+                "finish",
+                "complete",
+                "done"
+            ],
+            "response": "Completion task. Let's identify what's left and tackle it step by step.",
+            "action": "task_breakdown"
+        },
+        {
+            "id": 39,
+            "category": "task_parsing",
+            "priority": 6,
+            "triggers": [
+                "plan",
+                "organize",
+                "schedule"
+            ],
+            "response": "Planning task. Let's use time-blocking to make this manageable.",
+            "action": "time_blocking"
+        },
+        {
+            "id": 40,
+            "category": "task_parsing",
+            "priority": 5,
+            "triggers": [
+                "someday",
+                "eventually",
+                "maybe"
+            ],
+            "response": "Future task noted. I'll add this to your low-priority list for later.",
+            "action": "parse_tasks_low"
+        },
+        {
+            "id": 41,
+            "category": "education",
+            "priority": 4,
+            "triggers": [
+                "explain",
+                "what is",
+                "how does",
+                "childlike story",
+                "like a story"
+            ],
+            "response": "Let me explain this with a simple story...",
+            "action": "story_mode"
+        },
+        {
+            "id": 42,
+            "category": "education",
+            "priority": 6,
+            "triggers": [
+                "neural network",
+                "ai",
+                "machine learning"
+            ],
+            "response": "Imagine a team of tiny messengers (neurons) passing notes (signals) in a big playground (network). They learn by practicing games, getting better at spotting patterns like hide-and-seek. This is like how Lock Focus trains your brain's pathways – repetitive play builds stronger connections. 🧠",
+            "action": "educational_analogy"
+        },
+        {
+            "id": 43,
+            "category": "education",
+            "priority": 6,
+            "triggers": [
+                "dopamine",
+                "reward",
+                "motivation"
+            ],
+            "response": "Dopamine is like your brain's reward candy 🍬. ADHD brains have less of it naturally, so we need extra 'candy' to feel motivated. That's why games and novelty feel so good!",
+            "action": "educational_analogy"
+        },
+        {
+            "id": 44,
+            "category": "education",
+            "priority": 6,
+            "triggers": [
+                "executive function",
+                "working memory"
+            ],
+            "response": "Executive function is like your brain's CEO – it plans, organizes, and manages tasks. ADHD means the CEO is a bit scattered. Lock Focus helps train these skills! 👔",
+            "action": "educational_analogy"
+        },
+        {
+            "id": 45,
+            "category": "education",
+            "priority": 6,
+            "triggers": [
+                "neuroplasticity",
+                "brain training"
+            ],
+            "response": "Neuroplasticity means your brain can rewire itself! Like building muscle at the gym, Lock Focus exercises build stronger focus pathways. 💪🧠",
+            "action": "educational_analogy"
+        },
+        {
+            "id": 46,
+            "category": "education",
+            "priority": 5,
+            "triggers": [
+                "why adhd",
+                "what causes adhd"
+            ],
+            "response": "ADHD is neurological – it's about brain structure and chemistry, not laziness or lack of willpower. Your brain is wired differently, with unique strengths! 🌟",
+            "action": "adhd_education"
+        },
+        {
+            "id": 47,
+            "category": "education",
+            "priority": 5,
+            "triggers": [
+                "hyperfocus",
+                "zone"
+            ],
+            "response": "Hyperfocus is ADHD's superpower! It's when you're so absorbed you lose track of time. The trick is directing it toward the right things. ⚡",
+            "action": "adhd_education"
+        },
+        {
+            "id": 48,
+            "category": "education",
+            "priority": 5,
+            "triggers": [
+                "time blindness",
+                "time perception"
+            ],
+            "response": "Time blindness means your brain doesn't naturally track time well. It's not your fault! Try visual timers or the Time Blindness game in Lock Focus. ⏰",
+            "action": "suggest_game_time_blindness"
+        },
+        {
+            "id": 49,
+            "category": "education",
+            "priority": 5,
+            "triggers": [
+                "rejection sensitive dysphoria",
+                "rsd"
+            ],
+            "response": "RSD is intense emotional pain from perceived rejection. It's common with ADHD. Remember: your feelings are valid, but they might be amplified. 💙",
+            "action": "adhd_education"
+        },
+        {
+            "id": 50,
+            "category": "education",
+            "priority": 5,
+            "triggers": [
+                "impulsivity",
+                "impulse control"
+            ],
+            "response": "Impulsivity is about acting before thinking. Try the 'pause button' technique: count to 5 before responding. Syllable Slasher game helps train this! 🎮",
+            "action": "suggest_game_syllable_slasher"
+        },
+        {
+            "id": 51,
+            "category": "education",
+            "priority": 4,
+            "triggers": [
+                "medication",
+                "stimulants"
+            ],
+            "response": "I can't give medical advice, but ADHD meds help balance brain chemistry. Talk to your doctor about options. Lock Focus complements treatment! 💊",
+            "action": "medical_disclaimer"
+        },
+        {
+            "id": 52,
+            "category": "education",
+            "priority": 5,
+            "triggers": [
+                "comorbidity",
+                "anxiety",
+                "depression"
+            ],
+            "response": "ADHD often comes with friends like anxiety or depression. Treating both is important. I'm here for support, but please see a professional too. 🌈",
+            "action": "professional_referral"
+        },
+        {
+            "id": 53,
+            "category": "education",
+            "priority": 4,
+            "triggers": [
+                "genetics",
+                "hereditary"
+            ],
+            "response": "ADHD is highly genetic – if you have it, there's a good chance a family member does too. It's not anyone's fault! 🧬",
+            "action": "adhd_education"
+        },
+        {
+            "id": 54,
+            "category": "education",
+            "priority": 4,
+            "triggers": [
+                "types of adhd",
+                "inattentive",
+                "hyperactive"
+            ],
+            "response": "ADHD has 3 types: Inattentive (daydreamy), Hyperactive-Impulsive (restless), and Combined (both). All are valid! 🎯",
+            "action": "adhd_education"
+        },
+        {
+            "id": 55,
+            "category": "education",
+            "priority": 5,
+            "triggers": [
+                "focus",
+                "attention",
+                "concentration"
+            ],
+            "response": "Focus is like a muscle – it gets tired but can be trained. Lock Focus games provide targeted workouts for your attention! 🏋️",
+            "action": "suggest_game_focus_flow"
+        },
+        {
+            "id": 56,
+            "category": "education",
+            "priority": 4,
+            "triggers": [
+                "diet",
+                "nutrition",
+                "food"
+            ],
+            "response": "Protein, omega-3s, and staying hydrated help ADHD brains. Avoid sugar crashes. But I'm not a nutritionist – consult one for personalized advice! 🥗",
+            "action": "lifestyle_tip"
+        },
+        {
+            "id": 57,
+            "category": "education",
+            "priority": 4,
+            "triggers": [
+                "sleep",
+                "insomnia",
+                "tired"
+            ],
+            "response": "ADHD and sleep issues go hand-in-hand. Good sleep hygiene is crucial. Try consistent bedtimes and limiting screens before bed. 😴",
+            "action": "lifestyle_tip"
+        },
+        {
+            "id": 58,
+            "category": "education",
+            "priority": 4,
+            "triggers": [
+                "exercise",
+                "physical activity"
+            ],
+            "response": "Exercise is like natural ADHD medication! It boosts dopamine and helps focus. Even 10 minutes helps. 🏃",
+            "action": "lifestyle_tip"
+        },
+        {
+            "id": 59,
+            "category": "education",
+            "priority": 4,
+            "triggers": [
+                "mindfulness",
+                "meditation"
+            ],
+            "response": "Mindfulness can be tough for ADHD brains, but even 2 minutes helps. Try guided meditations or movement-based practices. 🧘",
+            "action": "lifestyle_tip"
+        },
+        {
+            "id": 60,
+            "category": "education",
+            "priority": 4,
+            "triggers": [
+                "diagnosis",
+                "getting diagnosed"
+            ],
+            "response": "Getting diagnosed involves assessments by a psychiatrist or psychologist. It's worth it for proper support! I can't diagnose, but I can support you. 📋",
+            "action": "professional_referral"
+        },
+        {
+            "id": 61,
+            "category": "coping",
+            "priority": 7,
+            "triggers": [
+                "hyperfocusing on wrong thing",
+                "distracted by"
+            ],
+            "response": "That's your superpower in disguise! Set a timer to switch – try 25 min work + 5 min break (Pomodoro with Lock Focus). ⏲️",
+            "action": "pomodoro_suggestion"
+        },
+        {
+            "id": 62,
+            "category": "coping",
+            "priority": 6,
+            "triggers": [
+                "routine",
+                "habit",
+                "morning routine"
+            ],
+            "response": "Build routines in micro-steps: Day 1: Just wake up and drink water. Day 2: Add brushing teeth. Build from there. 📅",
+            "action": "habit_building"
+        },
+        {
+            "id": 63,
+            "category": "coping",
+            "priority": 7,
+            "triggers": [
+                "procrastination",
+                "can't start",
+                "avoiding"
+            ],
+            "response": "Procrastination is often fear or overwhelm. Try body doubling: pretend I'm here – start with the tiniest step, like opening the app. 👥",
+            "action": "body_doubling"
+        },
+        {
+            "id": 64,
+            "category": "coping",
+            "priority": 6,
+            "triggers": [
+                "late",
+                "always late",
+                "time management"
+            ],
+            "response": "Time blindness is real! Explain it: 'I value our time; my brain just estimates differently.' Use alarms and visual timers. ⏰",
+            "action": "time_management_tip"
+        },
+        {
+            "id": 65,
+            "category": "coping",
+            "priority": 6,
+            "triggers": [
+                "forget",
+                "forgetting",
+                "memory"
+            ],
+            "response": "External memory is your friend! Use apps, sticky notes, phone reminders. Your brain is for thinking, not storing. 📝",
+            "action": "memory_strategy"
+        },
+        {
+            "id": 66,
+            "category": "coping",
+            "priority": 6,
+            "triggers": [
+                "distraction",
+                "distractions",
+                "can't focus"
+            ],
+            "response": "Minimize distractions: phone in another room, noise-canceling headphones, Focus Flow game to train attention. 🎧",
+            "action": "distraction_management"
+        },
+        {
+            "id": 67,
+            "category": "coping",
+            "priority": 5,
+            "triggers": [
+                "organization",
+                "messy",
+                "clutter"
+            ],
+            "response": "ADHD brains struggle with organization. Use clear bins, labels, and the 'one touch' rule: put things away immediately. 📦",
+            "action": "organization_tip"
+        },
+        {
+            "id": 68,
+            "category": "coping",
+            "priority": 5,
+            "triggers": [
+                "decision",
+                "choices",
+                "can't decide"
+            ],
+            "response": "Decision fatigue is real! Limit choices: pick 2-3 options max. Or flip a coin – your gut reaction tells you what you want. 🪙",
+            "action": "decision_strategy"
+        },
+        {
+            "id": 69,
+            "category": "coping",
+            "priority": 6,
+            "triggers": [
+                "social",
+                "friends",
+                "relationships"
+            ],
+            "response": "ADHD affects relationships. Be honest about your needs, set reminders to check in, and forgive yourself for mistakes. 💬",
+            "action": "social_strategy"
+        },
+        {
+            "id": 70,
+            "category": "coping",
+            "priority": 7,
+            "triggers": [
+                "scrolling",
+                "phone addiction",
+                "social media"
+            ],
+            "response": "Novelty-seeking is ADHD's trap! Use gaze-locked Focus Flow to train away from scrolling. Set app limits. 📱",
+            "action": "suggest_game_focus_flow"
+        },
+        {
+            "id": 71,
+            "category": "coping",
+            "priority": 5,
+            "triggers": [
+                "perfectionism",
+                "perfect",
+                "not good enough"
+            ],
+            "response": "ADHD perfectionism is real – it's fear of failure. Remember: done is better than perfect. Progress over perfection! ✨",
+            "action": "mindset_shift"
+        },
+        {
+            "id": 72,
+            "category": "coping",
+            "priority": 5,
+            "triggers": [
+                "motivation",
+                "no motivation",
+                "unmotivated"
+            ],
+            "response": "Motivation is unreliable with ADHD. Build systems instead: routines, accountability, rewards. Don't wait for motivation! 🎯",
+            "action": "system_building"
+        },
+        {
+            "id": 73,
+            "category": "coping",
+            "priority": 5,
+            "triggers": [
+                "boring",
+                "bored",
+                "uninteresting"
+            ],
+            "response": "ADHD brains crave stimulation. Gamify boring tasks: set timers, compete with yourself, or add music. 🎵",
+            "action": "gamification_tip"
+        },
+        {
+            "id": 74,
+            "category": "coping",
+            "priority": 5,
+            "triggers": [
+                "transition",
+                "switching tasks",
+                "context switching"
+            ],
+            "response": "Transitions are hard for ADHD. Use a 'bridge' activity: 2-min stretch or deep breath between tasks. 🌉",
+            "action": "transition_strategy"
+        },
+        {
+            "id": 75,
+            "category": "coping",
+            "priority": 4,
+            "triggers": [
+                "accountability",
+                "partner",
+                "support"
+            ],
+            "response": "Accountability helps! Find a body double, join ADHD groups, or use apps. You don't have to do this alone. 🤝",
+            "action": "accountability_suggestion"
+        },
+        {
+            "id": 76,
+            "category": "coping",
+            "priority": 4,
+            "triggers": [
+                "reward",
+                "treat",
+                "celebrate"
+            ],
+            "response": "Rewards work for ADHD brains! Celebrate small wins. Finished a task? Treat yourself! 🎉",
+            "action": "reward_system"
+        },
+        {
+            "id": 77,
+            "category": "coping",
+            "priority": 5,
+            "triggers": [
+                "environment",
+                "workspace",
+                "setup"
+            ],
+            "response": "Your environment matters! Minimize visual clutter, use good lighting, and create a dedicated workspace. 🪴",
+            "action": "environment_tip"
+        },
+        {
+            "id": 78,
+            "category": "coping",
+            "priority": 4,
+            "triggers": [
+                "energy",
+                "low energy",
+                "fatigue"
+            ],
+            "response": "Match tasks to energy levels: hard tasks when alert, easy tasks when tired. Track your energy patterns. ⚡",
+            "action": "energy_management"
+        },
+        {
+            "id": 79,
+            "category": "coping",
+            "priority": 4,
+            "triggers": [
+                "self-care",
+                "taking care of myself"
+            ],
+            "response": "Self-care isn't selfish! Basics first: sleep, food, water, movement. Then add what brings you joy. 💚",
+            "action": "self_care_reminder"
+        },
+        {
+            "id": 80,
+            "category": "coping",
+            "priority": 3,
+            "triggers": [
+                "default"
+            ],
+            "response": "How can I support your focus today? I'm here to help with ADHD strategies and Lock Focus tips. Tell me more!",
+            "action": "general_support"
+        }
+    ]
+}
