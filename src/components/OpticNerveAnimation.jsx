@@ -8,9 +8,9 @@ const OpticNerveAnimation = () => {
         const ctx = canvas.getContext('2d');
         let animationFrameId;
 
-        // Configuration
-        const nerveCount = 12;
-        const particlesPerNerve = 5;
+        // Configuration - Reduced for performance
+        const nerveCount = 8;
+        const particlesPerNerve = 3;
         const eyeRadius = 60; // Size of the eye center
 
         let width, height, centerX, centerY;
@@ -190,7 +190,8 @@ const OpticNerveAnimation = () => {
         };
 
         const animate = () => {
-            ctx.fillStyle = 'rgba(2, 6, 23, 0.2)'; // Slate-950 with trails
+            // Faster fading for trials to reduce fillRect calls complexity
+            ctx.fillStyle = 'rgba(2, 6, 23, 0.4)';
             ctx.fillRect(0, 0, width, height);
 
             drawEye(ctx);

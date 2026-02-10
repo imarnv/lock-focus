@@ -128,10 +128,14 @@ const AdaptivePdfReader = () => {
 
                     fullText += pageText + '\n\n';
 
-                    // Update Progress (20% -> 80%)
                     const percent = 20 + Math.round((i / totalPages) * 60);
                     setProgress(percent);
                     setStatusText(`Extracting page ${i} of ${totalPages}...`);
+
+                    // Yield to main thread to prevent UI freezing
+                    if (i % 2 === 0) {
+                        await new Promise(resolve => setTimeout(resolve, 0));
+                    }
                 } catch (pageErr) {
                     console.warn(`Skipping page ${i} due to error`, pageErr);
                 }
@@ -235,6 +239,10 @@ const AdaptivePdfReader = () => {
 
                 doc.text(line, margin, cursorY);
                 cursorY += lineHeight;
+
+                // Yield occasionally during heavy PDF reconstruction
+                // (Note: can't await here since JS console is synchronous, but we can do it if we refactor to async)
+                // For now, the loop break in processPdf handles the main chunk.
             });
 
             const pdfBlob = doc.output('blob');

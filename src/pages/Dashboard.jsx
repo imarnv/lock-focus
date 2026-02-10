@@ -12,6 +12,35 @@ import AuroraAnimation from '../components/AuroraAnimation';
 import { storage } from '../utils/storage';
 import VisionStudioCards from '../components/VisionStudioCards';
 
+// Optimized CSS Keyframes for Performance
+const dashboardStyles = `
+  @keyframes scan-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.4; }
+    50% { transform: scale(1.08); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 0.4; }
+  }
+  @keyframes orbital-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes orbital-rotate-rev {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+  }
+  @keyframes floating-particle {
+    0% { transform: translateY(0); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(-12px); opacity: 0; }
+  }
+  .gpu-accelerated {
+    will-change: transform, opacity;
+  }
+`;
+
 const Card = ({ children, className = "", delay = 0 }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -132,24 +161,18 @@ const Dashboard = () => {
                         </motion.p>
                     </div>
 
-                    {/* NEURAL PULSE CORE — Immersive Stats Visual */}
                     <div className="hidden lg:flex relative items-center justify-center w-[450px] h-[450px]">
+                        <style>{dashboardStyles}</style>
                         {/* Immersive Orbital Rings */}
-                        <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             {[420, 320, 220].map((size, i) => (
-                                <motion.div
+                                <div
                                     key={size}
-                                    className="absolute rounded-full border border-white/[0.03] dark:border-blue-500/10"
-                                    style={{ width: size, height: size }}
-                                    animate={{
-                                        rotate: i % 2 === 0 ? 360 : -360,
-                                        scale: [1, 1.05, 1],
-                                        opacity: [0.1, 0.2, 0.1]
-                                    }}
-                                    transition={{
-                                        rotate: { duration: 20 + i * 10, repeat: Infinity, ease: "linear" },
-                                        scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-                                        opacity: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+                                    className={`absolute rounded-full border border-white/[0.03] dark:border-blue-500/10 gpu-accelerated`}
+                                    style={{
+                                        width: size,
+                                        height: size,
+                                        animation: `${i % 2 === 0 ? 'orbital-rotate' : 'orbital-rotate-rev'} ${20 + i * 10}s linear infinite, pulse-ring 4s ease-in-out infinite`
                                     }}
                                 />
                             ))}
@@ -224,17 +247,43 @@ const Dashboard = () => {
                                 {/* Scanning Rings */}
                                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                     {[80, 56, 36].map((size, i) => (
-                                        <motion.div key={i} className="absolute rounded-full border" style={{ width: `${size}%`, height: `${size}%`, borderColor: `rgba(96, 165, 250, ${0.12 - i * 0.03})` }} animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 3, repeat: Infinity, delay: i * 0.4, ease: 'easeInOut' }} />
+                                        <div
+                                            key={i}
+                                            className="absolute rounded-full border gpu-accelerated"
+                                            style={{
+                                                width: `${size}%`,
+                                                height: `${size}%`,
+                                                borderColor: `rgba(96, 165, 250, ${0.12 - i * 0.03})`,
+                                                animation: `pulse-ring 3s ease-in-out ${i * 0.4}s infinite`
+                                            }}
+                                        />
                                     ))}
                                     {/* Rotating Scan Beam */}
-                                    <motion.div className="absolute w-[70%] h-[70%] rounded-full" style={{ background: 'conic-gradient(from 0deg, transparent 0%, rgba(59,130,246,0.15) 10%, transparent 20%)' }} animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: 'linear' }} />
+                                    <div
+                                        className="absolute w-[70%] h-[70%] rounded-full gpu-accelerated"
+                                        style={{
+                                            background: 'conic-gradient(from 0deg, transparent 0%, rgba(59,130,246,0.15) 10%, transparent 20%)',
+                                            animation: 'scan-rotate 4s linear infinite'
+                                        }}
+                                    />
                                     {/* Center Dot */}
-                                    <motion.div className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-[0_0_20px_rgba(96,165,250,0.8)]" animate={{ scale: [1, 1.4, 1], opacity: [0.7, 1, 0.7] }} transition={{ duration: 2, repeat: Infinity }} />
+                                    <div
+                                        className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-[0_0_20px_rgba(96,165,250,0.8)] gpu-accelerated"
+                                        style={{ animation: 'pulse-ring 2s ease-in-out infinite' }}
+                                    />
                                 </div>
 
                                 {/* Floating Particles */}
                                 {[...Array(5)].map((_, i) => (
-                                    <motion.div key={`p-${i}`} className="absolute w-1 h-1 rounded-full bg-blue-400/60" style={{ top: `${20 + i * 15}%`, left: `${15 + i * 16}%` }} animate={{ y: [0, -12, 0], opacity: [0, 1, 0] }} transition={{ duration: 2 + i * 0.5, repeat: Infinity, delay: i * 0.3 }} />
+                                    <div
+                                        key={`p-${i}`}
+                                        className="absolute w-1 h-1 rounded-full bg-blue-400/60 gpu-accelerated"
+                                        style={{
+                                            top: `${20 + i * 15}%`,
+                                            left: `${15 + i * 16}%`,
+                                            animation: `floating-particle ${2 + i * 0.5}s ease-in-out ${i * 0.3}s infinite`
+                                        }}
+                                    />
                                 ))}
 
                                 {/* Top Bar */}

@@ -42,25 +42,20 @@ const AuroraAnimation = () => {
                 ctx.fill();
             }
 
-            // Using globalCompositeOperation for nice blending
-            ctx.globalCompositeOperation = 'screen'; // Lighter blending
+            // Draw fewer orbs or simplify
+            ctx.globalCompositeOperation = 'screen';
 
             // Orb 1 (Blue-ish)
             const x1 = width * 0.2 + Math.sin(t * 0.0005) * (width * 0.1);
             const y1 = height * 0.4 + Math.cos(t * 0.0003) * (height * 0.1);
-            drawOrb(x1, y1, width * 0.6, `rgba(59, 130, 246, 0.15)`); // blue-500 low opacity
+            drawOrb(x1, y1, width * 0.5, `rgba(59, 130, 246, 0.1)`);
 
             // Orb 2 (Teal-ish)
             const x2 = width * 0.8 - Math.sin(t * 0.0004) * (width * 0.1);
             const y2 = height * 0.6 - Math.cos(t * 0.0006) * (height * 0.1);
-            drawOrb(x2, y2, width * 0.5, `rgba(45, 212, 191, 0.15)`); // teal-400 low opacity
+            drawOrb(x2, y2, width * 0.4, `rgba(45, 212, 191, 0.1)`);
 
-            // Orb 3 (Purple-ish, smaller)
-            const x3 = width * 0.5 + Math.sin(t * 0.001) * (width * 0.2);
-            const y3 = height * 0.5 + Math.cos(t * 0.0008) * (height * 0.2);
-            drawOrb(x3, y3, width * 0.4, `rgba(168, 85, 247, 0.1)`); // purple-500 low opacity
-
-            t += 1;
+            t += 2; // Move faster through time to reduce calculation overhead per frame
             requestAnimationFrame(draw);
         };
 
