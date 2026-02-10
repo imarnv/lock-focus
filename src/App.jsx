@@ -18,6 +18,10 @@ import PeriQuestGame from './pages/PeriQuestGame';
 import AdaptivePdfReader from './pages/AdaptivePdfReader';
 import TimeBlindnessGame from './pages/TimeBlindnessGame';
 
+// Chatbot Imports
+import AIAssistant from './pages/AIAssistant';
+import AIChatBubble from './components/AIChatBubble';
+
 import { ThemeProvider } from './components/ThemeContext';
 import ProjectPage from './pages/ProjectPage';
 import TestResults from './pages/TestResults';
@@ -88,7 +92,13 @@ function App() {
           <Route path="/color-match" element={<ColorMatchGame />} />
           <Route path="/balloon-pop" element={<BalloonPopGame />} />
           <Route path="/zen-drive" element={<ZenDrive />} />
+
+          {/* Chatbot Route */}
+          <Route path="/ai-assistant" element={<AIAssistant />} />
         </Routes>
+
+        {/* Global Chat Overlay */}
+        <AIChatBubble />
       </Router>
     </ThemeProvider>
   );
