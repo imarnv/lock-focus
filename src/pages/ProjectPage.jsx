@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import ProjectNavbar from "../components/ProjectNavbar";
 import ProblemStatementModal from "../components/ProblemStatementModal";
 import VisionSimulator from "../components/VisionSimulator";
+import Footer from "../components/Footer";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -232,44 +233,7 @@ const ProjectPage = () => {
             </section>
 
             {/* ================= FOOTER ================= */}
-            <footer className="py-24 border-t border-white/5 bg-black">
-                <div className="container mx-auto px-6">
-                    <div className="flex flex-col md:flex-row justify-between items-start gap-16 mb-20">
-                        <div className="max-w-sm">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-2 bg-primary rounded-lg">
-                                    <Brain className="w-6 h-6 text-black" />
-                                </div>
-                                <span className="text-2xl font-black tracking-tighter uppercase">Lock Focus</span>
-                            </div>
-                            <p className="text-slate-500 text-sm font-light leading-relaxed">
-                                An intent-aware, adaptive cognitive ecosystem built to empower neurodiverse workflows.
-                            </p>
-                        </div>
-
-                        <div className="flex gap-20">
-                            <div className="flex flex-col gap-4">
-                                <h5 className="text-xs font-mono text-white tracking-widest uppercase mb-2">Build</h5>
-                                <a href="https://github.com" className="text-slate-500 hover:text-white text-sm transition-colors flex items-center gap-2">
-                                    <Github className="w-4 h-4" /> Source Code
-                                </a>
-                                <a href="#" className="text-slate-500 hover:text-white text-sm transition-colors">Documentation</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex flex-wrap gap-2">
-                            {["React", "Vite", "TensorFlow.js", "Tailwind"].map(t => (
-                                <span key={t} className="px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-mono text-slate-500">{t}</span>
-                            ))}
-                        </div>
-                        <p className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.2em]">
-                            Made with <Heart className="inline w-3 h-3 text-red-500 mx-1 fill-current" /> for the future of accessibility
-                        </p>
-                    </div>
-                </div>
-            </footer>
+            <Footer />
 
             <ProblemStatementModal open={isProblemOpen} onClose={() => setIsProblemOpen(false)} />
         </div>
