@@ -193,8 +193,34 @@ Test task parsing (for debugging).
 
 ## Troubleshooting
 
-### Backend won't start
-- Ensure port 3001 is available
+### Backend Services
+
+This project uses two backend services:
+1. **Python FastAPI** (Port 8000): Handles authentication, user data, and core logic.
+2. **Node.js Express** (Port 3001): Handles the AI Chatbot functionality.
+
+## specific Setup
+
+### 1. Python Backend
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run server
+uvicorn main:app --reload --port 8000
+```
+
+### 2. Node.js Backend (Chatbot)
+```bash
+# Install dependencies
+npm install
+
+# Run server
+node server.js
+```
+**Note:** You must have both servers running for the full application to work.
+
+## Environment Variables
 - Check `backend/package.json` exists
 - Run `cd backend && npm install`
 
