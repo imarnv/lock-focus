@@ -1,17 +1,65 @@
 # Lock Focus
 > **An Intent-Aware, Adaptive Cognitive Ecosystem**
 
-Lock Focus is a privacy-first web platform designed to assess, track, and improve cognitive focus through adaptive AI and gamified neuro-feedback. It bridges the gap between static content and neurodiverse needs (ADHD/Dyslexia) using real-time attention signals.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Status: Hackathon Final](https://img.shields.io/badge/Status-Hackathon%20Final-blue)](https://github.com/imarnv/lock-focus)
+[![Tech Stack](https://img.shields.io/badge/Tech-React%20%7C%20MediaPipe%20%7C%20Tailwind-green)](https://reactjs.org/)
+
+**Lock Focus** is a privacy-first web platform designed to assess, track, and improve cognitive focus through adaptive AI and gamified neuro-feedback. It bridges the gap between static content and neurodiverse needs (ADHD/Dyslexia) using real-time attention signals.
 
 ---
 
-## Architecture and Data Flow
+## 🧠 The Problem vs. Solution
 
-Lock Focus runs entirely client-side to ensure privacy and low latency. It leverages persistent browser storage and high-precision MediaPipe AI models for gaze estimation.
+### The "Attention Gap"
+Modern interfaces are rigid. They don’t know if you’re focused, distracted, or struggling. For users with **ADHD** or **Dyslexia**, this rigidity creates barriers:
+*   **ADHD**: Drifting attention leads to missed information.
+*   **Dyslexia**: Walls of text cause visual crowding and fatigue.
 
-## System Architecture
+### Our Solution: "Intent-Aware" Computing
+**Lock Focus** isn't just a tool; it's an **active participant**.
+*   **Active Sensing**: Perceives attention state using privacy-first, local AI (Gaze Tracking).
+*   **Reactive Adaptation**: Modifies content in real-time based on focus.
+*   **Gamified Training**: Strengthens cognitive muscles through clinically-inspired loops.
 
-The ecosystem is built on a modular component architecture, ensuring separation of concerns between UI, Logic, and AI processing.
+---
+
+## 🚀 Key Features
+
+### 1. Neuro-Pilot (Focus Flow)
+A high-intensity flow trainer that uses the Gaze Sensing engine for input.
+*   **Gaze-Steered Gameplay**: The ship navigates based on your eye movement.
+*   **Focus-Locked Progression**: The game pauses instantly if you look away.
+*   **Neuro-Analytics**: detailed reports on attention span and reaction latency.
+
+### 2. PeriQuest (Peripheral Vision Training) **[NEW]**
+A dynamic reaction game designed to expand visual awareness.
+*   **Central Fixation**: Users must keep eyes locked on the center.
+*   **Peripheral Targets**: Detect and react to shapes appearing in the peripheral field.
+*   **Heatmap Analysis**: Tracks "blind spots" and reaction speeds across the visual field.
+
+### 3. ADHD Support Companion **[NEW]**
+An AI-powered chatbot for executive function management.
+*   **Task Breakdown**: Deconstructs overwhelming tasks into manageable steps.
+*   **Prioritization**: Helps users organize their day based on energy levels.
+*   **Coping Strategies**: Provides immediate, actionable advice for focus and emotional regulation.
+
+### 4. Adaptive Reader & OCR
+A reading environment that proactively responds to attention.
+*   **Focus Dimming**: Text dims when you look away to save your place.
+*   **Dyslexia Mode**: OpenDyslexic font and increased line spacing.
+*   **Vision Stress Mode**: Reduces contrast and visual noise.
+
+### 5. Vision Studio
+Simulates neurodivergent experiences to foster empathy and understanding.
+*   **ADHD Simulator**: Visualizes distraction and sensory overload.
+*   **Dyslexia Simulator**: Demonstrates letter dancing and crowding.
+
+---
+
+## 🏗️ System Architecture
+
+The ecosystem allows for modular interaction between the UI, Logic, and AI layers, all running client-side.
 
 ```mermaid
 flowchart TB
@@ -29,7 +77,7 @@ flowchart TB
     style AI fill:#1e293b,stroke:#a855f7,stroke-width:2px,color:#fff
     style Storage fill:#1e293b,stroke:#10b981,stroke-width:2px,color:#fff
 
-    UI -->|Events| Logic
+    UI -->|User Events| Logic
     Logic -->|State Updates| UI
     Logic -->|Inference Request| AI
     AI -->|Gaze & Face Landmarks| Logic
@@ -37,9 +85,9 @@ flowchart TB
     Storage -->|Load Profile| Logic
 ```
 
-## Data Flow Pipeline
+## 🔄 Data Flow Pipeline
 
-A privacy-first pipeline where video feeds are processed instantaneously in memory with zero data transmission.
+A privacy-first pipeline where video feeds are processed instantaneously in memory with **Zero Data Transmission**.
 
 ```mermaid
 sequenceDiagram
@@ -49,9 +97,9 @@ sequenceDiagram
     participant Engine as ⚙️ Gaze Engine
     participant App as 🎮 Focus Flow / Reader
     participant Store as 💾 LocalStorage
-
+    
     Note over Cam, Store: 🔒 Privacy Barrier: Local-Only Processing
-
+    
     Cam->>MP: Raw Video Frame (60fps)
     activate MP
     MP->>Engine: 478 Face Landmarks + Iris Data
@@ -59,115 +107,78 @@ sequenceDiagram
     
     activate Engine
     Engine->>Engine: Calculate Pupil-to-Corner Ratio
-    Engine->>Engine: Analyze Head Pose (Nose/Cheek Vector)
+    Engine->>Engine: Analyze Head Pose (Vector)
     Engine->>App: Gaze Coordinates (x, y) + Fixation State
     deactivate Engine
     
     activate App
     alt Focus Flow
         App->>App: Update Level Physics / Neuro-Pilot
+    else PeriQuest
+        App->>App: Verify Central Fixation
     else Adaptive Reader
         App->>App: Dynamic Opacity & Font Scaling
     end
     
-    App-->>Store: Save Session Metrics via storage.js
+    App-->>Store: Save Session Metrics (JSON)
     deactivate App
 ```
 
 ---
 
-## Key Features
+## 🛠️ Tech Stack
 
-### 1. High-Precision Gaze Sensing
-The core of the ecosystem is a real-time gaze sensing engine powered by MediaPipe Iris Tracking.
-- **Mechanism**: Tracks pupil movement relative to the eye corners (canthus) to determine looking direction without requiring fixed calibration.
-- **Head Pose Integration**: Combines iris data with head-pose orientation (nose-to-cheek alignment) to detect when a user is "Away" or "Distracted".
-- **Stability**: Implements Exponential Moving Average (EMA) smoothing to eliminate tracking jitter.
-
-### 2. Focus Flow: Neuro-Pilot Training
-A high-intensity flow trainer that uses the Gaze Sensing engine for input.
-- **Neuro-Pilot Mode**: The game steers itself as long as the user maintains focus on the center. Looking away pauses progress.
-- **Progression**: Five difficulty levels (Beginner to Master) with scaling speed and session durations.
-- **Persistence**: Level unlocks and session history are stored locally to track long-term cognitive endurance.
-
-### 3. Chronos Match (Time Blindness Training)
-A rhythm-based estimation game designed to improve internal clock accuracy, specifically for ADHD users.
-- **Chaos Mode**: Simulates real-world distractions (notifications, visual noise) to train focus under pressure.
-- **Scoring**: Measures millisecond-level estimation accuracy against target durations.
-
-### 4. Adaptive PDF Reader & OCR
-A reading environment that proactively responds to the user's attention.
-- **Condition-Specific Modes**: Specialized UI profiles for **Dyslexia** (OpenDyslexic-style spacing), **ADHD** (clutter reduction), and **Vision Stress** (muted contrast).
-- **OCR Intelligence**: Uses Tesseract.js to convert static images or legacy PDFs into accessible, gaze-reactive text.
+*   **Frontend**: React 18, Vite, Tailwind CSS, Framer Motion
+*   **AI/ML**: MediaPipe (@mediapipe/tasks-vision), Tesseract.js (OCR)
+*   **State Management**: React Context, LocalStorage
+*   **Visualization**: Recharts, Canvas API
+*   **Icons**: Lucide React
 
 ---
 
-## Step-by-Step Walkthrough
-
-### Step 1: Initialize the Application
-1. Open the application and experience the "Lock Focus" neural intro.
-2. Explore "Vision Studio" on the landing page for neuro-diversity simulations.
-
-### Step 2: Access the Dashboard
-1. Click "Dashboard" to enter the centralized management hub.
-2. Review focus metrics and rolling performance stats.
-
-### Step 3: Test Neuro-Pilot in Focus Flow
-1. Navigate to **Games -> Focus Flow**.
-2. Enable the camera (Local Processing Only).
-3. Start a session in **Neuro-Pilot** mode.
-4. Observe how looking left/right steers the ship and looking away pauses the game.
-
-### Step 4: Review Neuro-Analytics
-1. Complete a session to generate a **Neuro-Report**.
-2. Analyze your **Focus Consistency Score** and estimated **Neural Latency**.
-
----
-
-## Project Structure
-
-```bash
-src/
-├── components/        # UI Modules (Aurora, NerveAnimation, VisionSimulator)
-├── layouts/           # Page Wrappers (DashboardLayout)
-├── hooks/             # Core Logic (useEyeTracking.js - MediaPipe Integration)
-├── pages/
-│   ├── FocusFlow.jsx        # Neuro-Pilot Game
-│   ├── Dashboard.jsx        # ADHD/Focus Management Hub
-│   ├── AdaptivePdfReader.jsx # Accessibility OCR Reader
-│   ├── TimeBlindnessGame.jsx # Chronos Match
-│   ├── SyllableSlasher.jsx   # Literacy Training
-│   ├── ZenDrive.jsx         # Peripheral Vision Simulator
-│   ├── ProjectPage.jsx      # Landing Experience
-│   └── ... (20+ specialized pages)
-├── utils/             # Helpers (storage.js - Local Persistence)
-└── App.js             # Routing & Dynamic Imports
-```
-
----
-
-## Tech Stack
-
-- **Frontend**: React 18, Vite, Tailwind CSS, Framer Motion
-- **AI/ML**: MediaPipe (@mediapipe/tasks-vision), Tesseract.js (OCR)
-- **Engine**: Canvas API for high-performance game rendering
-- **Storage**: JSON-based Browser LocalStorage Logic (Privacy-First)
-- **Icons**: Lucide React
-
----
-
-## Privacy and Ethics
+## 🔒 Privacy & Ethics
 
 Lock Focus is built with **Privacy-by-Design**:
-- **Zero-Transmission**: Video streams never leave the browser; processing happens in-memory and is discarded immediately.
-- **No Biometrics**: We track mathematical vectors (points), not faces or identities.
-- **Opt-in Only**: Camera access is explicitly requested per session with clear disclaimers.
+*   **Zero-Transmission**: Video streams never leave the browser; processing happens in-memory and is discarded immediately.
+*   **No Biometrics**: We track mathematical vectors (points), not faces or identities.
+*   **Opt-in Only**: Camera access is explicitly requested per session.
 
 ---
 
-## Setup Instructions
+## 🏁 Getting Started
 
-1. **Clone**: `git clone https://github.com/imarnv/lock-focus.git`
-2. **Install**: `npm install`
-3. **Run**: `npm run dev`
-4. **Access**: `http://localhost:5173`
+### Prerequisites
+*   Node.js (v16+)
+*   npm or yarn
+
+### Installation
+
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/imarnv/lock-focus.git
+    cd lock-focus
+    ```
+
+2.  **Install dependencies**
+    ```bash
+    npm install
+    ```
+
+3.  **Run the development server**
+    ```bash
+    npm run dev
+    ```
+
+4.  **Open in Browser**
+    Visit `http://localhost:5173` to start using Lock Focus.
+
+---
+
+## 👥 Contributors
+
+*   **[Yash Srivastava]** - *Lead Developer & AI Integration*
+*   **[Team Members]** - *Frontend & Design*
+
+---
+
+*Built with ❤️ for the future of accessible computing.*

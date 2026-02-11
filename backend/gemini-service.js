@@ -3,6 +3,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Workaround for potential local certificate issues (e.g. corporate proxies)
+// WARNING: This makes the connection insecure, but allows the app to function in restrictive environments.
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 /**
  * Gemini Service for LLM Integration
  * Communicates with Google's Gemini API for natural language generation

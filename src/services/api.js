@@ -9,7 +9,10 @@ export const api = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password, full_name: fullName }),
             });
-            if (!response.ok) throw new Error('Registration failed');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: 'Registration failed' }));
+                throw new Error(errorData.detail || 'Registration failed');
+            }
             return await response.json();
         } catch (error) {
             console.error(error);
@@ -25,7 +28,10 @@ export const api = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
-            if (!response.ok) throw new Error('Login failed');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: 'Login failed' }));
+                throw new Error(errorData.detail || 'Login failed');
+            }
             return await response.json();
         } catch (error) {
             console.error(error);

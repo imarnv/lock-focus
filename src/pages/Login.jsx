@@ -17,9 +17,9 @@ const LoginPage = () => {
         try {
             const userData = await api.login(email, password);
             localStorage.setItem('currentUser', JSON.stringify(userData));
-            navigate('/home');
+            navigate('/project');
         } catch (err) {
-            alert("Login Failed: Invalid credentials or Server Offline");
+            alert("Login Failed: " + err.message);
             setLoading(false);
         }
     };

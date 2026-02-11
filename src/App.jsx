@@ -54,7 +54,7 @@ const LandingWrapper = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 1 }}
         >
-          <ProjectPage />
+          <LoginPage />
         </motion.div>
       )}
     </>
@@ -78,6 +78,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/download" element={<DownloadPage />} />
+            <Route path="/project" element={<ProjectPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/focus-scan" element={<FocusScan />} />
             <Route path="/test-results" element={<TestResults />} />

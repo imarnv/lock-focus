@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import RulesEngine from './rules-engine.js';
 import GeminiService from './gemini-service.js';
 import TaskParser from './task-parser.js';
+import chatStore from './chat-store.js';
 
 // Load environment variables
 dotenv.config();
@@ -121,24 +122,28 @@ app.post('/api/chat', async (req, res) => {
             const ollamaAvailable = await ollamaService.isAvailable();
 
             if (ollamaAvailable) {
-                // Get conversation history for this session
-                const history = conversationHistories.get(sessionId) || [];
-                finalResponse = await ollamaService.generateResponse(message, history);
-
-                // Update conversation history
-                history.push({ role: 'user', content: message });
-                history.push({ role: 'assistant', content: finalResponse });
-
-                // Keep only last 10 messages to avoid context overflow
-                if (history.length > 20) {
-                    history.splice(0, history.length - 20);
-                }
-
-                conversationHistories.set(sessionId, history);
+                finalResponse = await ollamaService.generateResponse(message, conversationHistories.get(sessionId) || []);
             } else {
                 finalResponse = "I'm here to help with ADHD strategies and Lock Focus tips! Tell me what's on your mind. 💙\n\nNote: The AI service is currently unavailable, but I can still help with basic support.";
             }
         }
+
+
+        // --- UNIFIED SAVING LOGIC ---
+        // Update conversation history
+        const history = conversationHistories.get(sessionId) || [];
+        history.push({ role: 'user', content: message });
+        history.push({ role: 'assistant', content: finalResponse });
+
+        // Keep only last 20 messages to avoid context overflow
+        if (history.length > 20) {
+            history.splice(0, history.length - 20);
+        }
+
+        conversationHistories.set(sessionId, history);
+
+        // Save to encrypted database
+        await chatStore.saveChat(sessionId, history);
 
         // Step 5: Send response
         res.json({

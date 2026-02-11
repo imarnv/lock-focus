@@ -29,7 +29,7 @@ const SignUp = () => {
             localStorage.setItem('currentUser', JSON.stringify(userData));
 
             // 4. Redirect
-            navigate('/home');
+            navigate('/project');
         } catch (error) {
             console.error("Signup failed", error);
             alert("Registration Failed: " + error.message);

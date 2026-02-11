@@ -37,3 +37,7 @@ backend/venv
 *.db
 *.sqlite3
 backend/debug_db.py
+backend/chat_history.json
+backend/test-*.js
+backend/fetch-models.js
+backend/list-models.js
