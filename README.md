@@ -216,11 +216,3 @@ Lock Focus is built with **Privacy-by-Design**:
 
 ---
 
-## 👥 Contributors
-
-*   **[Yash Srivastava]** - *Lead Developer & AI Integration*
-*   **[Team Members]** - *Frontend & Design*
-
----
-
-*Built with ❤️ for the future of accessible computing.*
